@@ -1,0 +1,7 @@
+\section{Introduction}
+
+DevSecOps pipelines often combine scanners, dependency updates, local patches, and deployment gates, but empirical claims about these combinations are difficult to audit. A scanner-only pipeline can find issues without changing delivery behavior. A remediation pipeline can edit code without proving that the residual state satisfies an explicit policy. A policy gate can block delivery without showing whether remediation actually reduced risk.
+
+SecFlowOps is an executable evaluation artifact for this gap. It compares configurations ranging from scanning-only execution to scanner, remediation, rescan, and OPA-based policy enforcement. The contribution is not a new vulnerability scanner. It is a reproducible protocol for measuring how scanner findings move through remediation and policy gates, including cases where the correct outcome is refusal rather than delivery.
+
+This revision addresses four reviewer-facing weaknesses. First, it adds result tables that connect campaign design, residual findings, and performance. Second, it separates injected-ground-truth recall from conservative scanner-output precision and static adjudication. Third, it adds baselines, including npm-audit-only remediation on NodeGoat. Fourth, it expands the paper from a smoke-run description into a fuller artifact evaluation with limitations stated at the level supported by the experiments.

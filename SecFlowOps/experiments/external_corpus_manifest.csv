@@ -1,0 +1,6 @@
+repo_id,url,origin_type,stack,commit,branch,captured_at_utc,file_count,loc,ground_truth_status,notes
+external_requests,https://github.com/psf/requests.git,external_oss_library,python;pip,,,2026-07-13T16:50:08.653891+00:00,130,19464,no_complete_external_ground_truth,Popular Python HTTP library.
+external_flask,https://github.com/pallets/flask.git,external_oss_framework,python;pip,,,2026-07-13T16:50:08.653891+00:00,236,36436,no_complete_external_ground_truth,Popular Python web framework.
+external_express,https://github.com/expressjs/express.git,external_oss_framework,javascript;npm,,,2026-07-13T16:50:08.653891+00:00,213,26700,no_complete_external_ground_truth,Popular Node.js web framework.
+external_nodegoat,https://github.com/OWASP/NodeGoat.git,external_security_benchmark,javascript;npm;docker,,,2026-07-13T16:50:08.653891+00:00,111,42046,no_complete_external_ground_truth,OWASP intentionally vulnerable Node.js benchmark.
+external_dvna,https://github.com/appsecco/dvna.git,external_security_benchmark,javascript;npm;docker,,,2026-07-13T16:50:08.653891+00:00,151,12278,no_complete_external_ground_truth,Damn Vulnerable NodeJS Application benchmark.

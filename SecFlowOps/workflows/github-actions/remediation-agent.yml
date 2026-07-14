@@ -1,0 +1,48 @@
+name: SecFlowOps remediation agent
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  remediate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install requirements
+        run: python -m pip install -r SecFlowOps/artifact/requirements.txt
+
+      - name: Run local remediation agent
+        run: |
+          python SecFlowOps/secflowops/agents/remediator_agent.py \
+            --workspace SecFlowOps/repos/sample_api \
+            --findings SecFlowOps/data/normalized/latest.jsonl \
+            --output secflowops-remediation-log.json
+        continue-on-error: true
+
+      - name: Create remediation PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: secflowops/remediation-${{ github.run_id }}
+          title: "SecFlowOps controlled remediation"
+          commit-message: "Apply SecFlowOps controlled remediation"
+          body: "Automated SecFlowOps remediation proposal. Human review required before merge."
+          labels: needs-review,security
+          delete-branch: true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: remediation-log
+          path: secflowops-remediation-log.json
+          if-no-files-found: ignore

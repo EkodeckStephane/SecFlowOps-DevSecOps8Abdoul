@@ -1,0 +1,13 @@
+patches:
+  - id: remove_fake_aws_test_secret
+    file: .env.test
+    risk_level: R2
+  - id: escape_search_response
+    file: app.py
+    risk_level: R2
+  - id: docker_non_root_user
+    file: Dockerfile
+    risk_level: R2
+  - id: k8s_drop_privileged
+    file: k8s/deployment.yaml
+    risk_level: R2

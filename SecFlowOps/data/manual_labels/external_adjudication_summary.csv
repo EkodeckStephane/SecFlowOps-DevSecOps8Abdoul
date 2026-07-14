@@ -1,0 +1,6 @@
+repo,tool,category,unique_findings
+external_dvna,trivy,iac,2
+external_flask,trivy,sca,13
+external_nodegoat,trivy,iac,1
+external_nodegoat,trivy,sca,65
+external_nodegoat,trivy,secret,1

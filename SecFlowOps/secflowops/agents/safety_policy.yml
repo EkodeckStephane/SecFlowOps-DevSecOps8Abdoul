@@ -1,0 +1,11 @@
+version: 0.1.0
+rules:
+  - id: no_main_push
+    description: Local agent must not push directly to main.
+    enforcement: local_only
+  - id: fake_secrets_only
+    description: Automated secret remediation is allowed only for documented fake test secrets.
+    enforcement: block_unknown_secret
+  - id: no_auto_merge
+    description: Branch/PR automation may be logged, but no auto-merge is allowed.
+    enforcement: no_merge

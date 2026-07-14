@@ -1,0 +1,9 @@
+autofix:
+  enabled: false
+  reason: "The current artifact uses deterministic rule-based patches and npm lockfile remediation. Semgrep autofix is documented as an R1 remediation mode but is not enabled without per-rule review."
+  allowed_rule_ids: []
+  required_checks:
+    - python -m unittest discover -s tests
+  pr_policy:
+    auto_merge: false
+    label: needs-review

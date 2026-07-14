@@ -1,0 +1,46 @@
+\section{Performance Results}
+
+The expanded campaign includes a performance study using the same 90 runs. Table~\ref{tab:performance-summary} summarizes the main end-to-end timings. Mean pipeline time was 0.246 seconds for build-only execution, 9.181 seconds for non-blocking scanning, 9.345 seconds for policy-only execution, 17.759 seconds for agents-only execution, and 18.122 seconds for the full SecFlowOps configuration.
+
+\begin{table}[t]
+\centering
+\caption{Mean end-to-end runtime by study and configuration.}
+\label{tab:performance-summary}
+\begin{tabular}{lrrr}
+\toprule
+Study & C1 scan & C5 SecFlowOps & Overhead \\
+\midrule
+Controlled & 9.181 s & 18.122 s & 8.941 s \\
+External OSS & 14.671 s & 28.637 s & 13.966 s \\
+Injected external & 18.155 s & 35.519 s & 17.364 s \\
+NodeGoat npm & 19.620 s & 96.302 s & 76.682 s \\
+Full protocol & 22.061 s & 43.749 s & 21.688 s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For SecFlowOps, the mean component times were 8.819 seconds for the initial scan, 8.553 seconds for the post-remediation scan, 0.288 seconds for local remediation, and 0.121 seconds for the OPA policy gate. Thus, scanner execution dominates runtime; policy evaluation is not the primary performance bottleneck in this controlled setting.
+
+The paired mean overhead of SecFlowOps over non-blocking scanning was 8.941 seconds. This overhead is mainly attributable to remediation validation and the second scanner pass.
+
+In the external campaign, mean pipeline time was 14.671 seconds for non-blocking scanning, 14.133 seconds for automatic scanning, 14.926 seconds for policy-only execution, 27.924 seconds for agents-only execution, and 28.637 seconds for SecFlowOps. For SecFlowOps, mean component times were 14.304 seconds for the initial scanner pass, 13.663 seconds for the post-remediation scanner pass, 0.401 seconds for remediation, and 0.097 seconds for the OPA policy gate. The paired mean overhead of SecFlowOps over non-blocking scanning was 13.966 seconds, again dominated by the second scanner pass.
+
+Table~\ref{tab:npm-performance} compares the NodeGoat npm-only baseline with SecFlowOps. The npm-only baseline took 104.518 seconds on average, including 51.078 seconds in \texttt{npm audit fix}. SecFlowOps took 96.302 seconds on average, including 44.778 seconds of remediation. These values should be interpreted as local artifact timings rather than general npm performance constants because package-manager runtime depends on cache state, lockfile structure, and advisory-database state.
+
+\begin{table}[t]
+\centering
+\caption{NodeGoat npm performance baseline.}
+\label{tab:npm-performance}
+\begin{tabular}{lrr}
+\toprule
+Configuration & Pipeline & npm/remediation \\
+\midrule
+B1 npm audit only & 104.518 s & 51.078 s \\
+C5 SecFlowOps & 96.302 s & 44.778 s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+In the injected external recall study, mean pipeline time was 18.155 seconds for non-blocking scanning and 35.519 seconds for SecFlowOps. These results show that npm remediation is substantially more expensive than deterministic text patches, and that scanner re-execution remains the dominant overhead across all studies.
+
+In the 432-run full protocol campaign, mean pipeline time was 22.061 seconds for C1 and 43.749 seconds for C5; medians were 20.691 seconds and 41.409 seconds, respectively. One C2 Semgrep run lasted 3944.596 seconds and is retained in the raw data; this outlier explains why C2 mean runtime is much larger than its median. In the ZAP probe, the ZAP-enabled scanner pass took 25.845 seconds for C1 and 20.116 seconds for C3, including ZAP quick scan execution against a local dynamic-port target.

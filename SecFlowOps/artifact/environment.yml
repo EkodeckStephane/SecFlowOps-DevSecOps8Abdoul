@@ -1,0 +1,10 @@
+name: secflowops-artifact
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13
+  - pip
+  - pip:
+      - matplotlib==3.10.5
+      - semgrep==1.169.0
+

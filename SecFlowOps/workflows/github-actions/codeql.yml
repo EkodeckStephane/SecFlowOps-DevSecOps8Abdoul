@@ -1,0 +1,29 @@
+name: SecFlowOps CodeQL
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  security-events: write
+  contents: read
+
+jobs:
+  codeql:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:python"

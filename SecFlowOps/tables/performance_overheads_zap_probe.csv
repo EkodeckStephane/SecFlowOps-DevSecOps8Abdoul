@@ -1,0 +1,6 @@
+comparison,metric,n_pairs,mean_delta_seconds,median_delta_seconds,stdev_delta_seconds,min_delta_seconds,max_delta_seconds
+C5_vs_C0_total,pipeline_time_seconds,0,0.0,0.0,0.0,0.0,0.0
+C5_vs_C1_incremental,pipeline_time_seconds,0,0.0,0.0,0.0,0.0,0.0
+C3_vs_C1_policy_gate,pipeline_time_seconds,1,-0.6593287999858148,-0.6593287999858148,0.0,-0.6593287999858148,-0.6593287999858148
+C4_vs_C1_agent_rescan,pipeline_time_seconds,0,0.0,0.0,0.0,0.0,0.0
+C5_vs_C4_policy_increment,pipeline_time_seconds,0,0.0,0.0,0.0,0.0,0.0

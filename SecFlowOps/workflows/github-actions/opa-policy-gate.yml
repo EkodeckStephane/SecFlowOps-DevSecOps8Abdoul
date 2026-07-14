@@ -1,0 +1,43 @@
+name: SecFlowOps OPA policy gate
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  opa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install OPA
+        run: |
+          curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64_static
+          chmod +x opa
+          sudo mv opa /usr/local/bin/opa
+
+      - name: Test Rego policy
+        run: opa test SecFlowOps/policies/rego
+
+      - name: Evaluate current normalized findings if present
+        run: |
+          python SecFlowOps/secflowops/policy_gate/evaluate_policy.py \
+            --findings SecFlowOps/data/normalized/latest.jsonl \
+            --output secflowops-policy-decision.json \
+            --coverage 0.0
+        continue-on-error: true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: opa-policy-decision
+          path: secflowops-policy-decision.json
+          if-no-files-found: ignore

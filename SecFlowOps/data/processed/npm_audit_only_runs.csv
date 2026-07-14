@@ -1,0 +1,4 @@
+run_id,campaign_id,configuration,repo,repetition,pipeline_time_seconds,npm_audit_seconds,npm_returncode,npm_changed_lockfile,initial_total,initial_critical,initial_high,initial_secret,residual_total,residual_critical,residual_high,residual_secret,resolved_total,resolved_critical,resolved_high,resolved_secret,tool_failure_count
+20260713T182807638499Z_B1_NpmAuditOnly_external_nodegoat_r1,npm_audit_only_20260713_r3,B1_NpmAuditOnly,external_nodegoat,1,114.39313280000351,55.40127719996963,1,True,78,10,40,1,32,3,13,1,46,7,27,0,0
+20260713T183002383492Z_B1_NpmAuditOnly_external_nodegoat_r2,npm_audit_only_20260713_r3,B1_NpmAuditOnly,external_nodegoat,2,109.13210310001159,58.645568699983414,1,True,78,10,40,1,32,3,13,1,46,7,27,0,0
+20260713T183151724139Z_B1_NpmAuditOnly_external_nodegoat_r3,npm_audit_only_20260713_r3,B1_NpmAuditOnly,external_nodegoat,3,90.02810799999861,39.18639410001924,1,True,78,10,40,1,32,3,13,1,46,7,27,0,0

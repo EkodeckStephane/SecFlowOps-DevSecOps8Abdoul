@@ -1,0 +1,23 @@
+name: Reusable SecFlowOps scan
+
+on:
+  workflow_call:
+    inputs:
+      configs:
+        required: false
+        type: string
+        default: "C5_SecFlowOps"
+
+jobs:
+  scan:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -r SecFlowOps/artifact/requirements.txt
+      - shell: pwsh
+        run: winget install --id AquaSecurity.Trivy --exact --accept-package-agreements --accept-source-agreements
+      - shell: pwsh
+        run: python SecFlowOps\scripts\run_matrix.py --smoke --configs ${{ inputs.configs }}

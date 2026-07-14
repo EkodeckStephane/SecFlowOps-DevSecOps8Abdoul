@@ -1,0 +1,26 @@
+[
+ {
+  "RuleID": "secflowops-fake-aws-access-key",
+  "Description": "AWS access key pattern, test secrets only",
+  "StartLine": 2,
+  "EndLine": 2,
+  "StartColumn": 20,
+  "EndColumn": 39,
+  "Match": "AKIAIOSFODNN7EXAMPLE",
+  "Secret": "AKIAIOSFODNN7EXAMPLE",
+  "File": "SecFlowOps/repos/sample_api/.env.test",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 3.6841838,
+  "Author": "",
+  "Email": "",
+  "Date": "",
+  "Message": "",
+  "Tags": [
+   "key",
+   "AWS",
+   "secflowops-test"
+  ],
+  "Fingerprint": "SecFlowOps/repos/sample_api/.env.test:secflowops-fake-aws-access-key:2"
+ }
+]

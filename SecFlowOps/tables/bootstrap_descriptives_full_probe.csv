@@ -1,0 +1,26 @@
+configuration,metric,n,mean,median,bootstrap_ci95_low,bootstrap_ci95_high,note
+C0_BuildOnly,pipeline_time_seconds,1,0.449253199971281,0.449253199971281,0.449253199971281,0.449253199971281,Descriptive bootstrap interval; not a substitute for independent replication
+C0_BuildOnly,recall,1,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C0_BuildOnly,precision,1,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C0_BuildOnly,auto_remediation_rate,1,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C0_BuildOnly,mttr_seconds,1,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,pipeline_time_seconds,1,29.390263300039805,29.390263300039805,29.390263300039805,29.390263300039805,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,recall,1,0.8571428571428571,0.8571428571428571,0.8571428571428571,0.8571428571428571,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,precision,1,0.13333333333333333,0.13333333333333333,0.13333333333333333,0.13333333333333333,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,auto_remediation_rate,1,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,mttr_seconds,1,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C3_PolicyOnly,pipeline_time_seconds,1,24.636791600030847,24.636791600030847,24.636791600030847,24.636791600030847,Descriptive bootstrap interval; not a substitute for independent replication
+C3_PolicyOnly,recall,1,0.8571428571428571,0.8571428571428571,0.8571428571428571,0.8571428571428571,Descriptive bootstrap interval; not a substitute for independent replication
+C3_PolicyOnly,precision,1,0.13333333333333333,0.13333333333333333,0.13333333333333333,0.13333333333333333,Descriptive bootstrap interval; not a substitute for independent replication
+C3_PolicyOnly,auto_remediation_rate,1,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C3_PolicyOnly,mttr_seconds,1,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,pipeline_time_seconds,1,41.4193849999574,41.4193849999574,41.4193849999574,41.4193849999574,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,recall,1,0.8571428571428571,0.8571428571428571,0.8571428571428571,0.8571428571428571,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,precision,1,0.13333333333333333,0.13333333333333333,0.13333333333333333,0.13333333333333333,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,auto_remediation_rate,1,0.078125,0.078125,0.078125,0.078125,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,mttr_seconds,1,0.270981,0.270981,0.270981,0.270981,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,pipeline_time_seconds,1,43.70832660002634,43.70832660002634,43.70832660002634,43.70832660002634,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,recall,1,0.8571428571428571,0.8571428571428571,0.8571428571428571,0.8571428571428571,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,precision,1,0.13333333333333333,0.13333333333333333,0.13333333333333333,0.13333333333333333,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,auto_remediation_rate,1,0.078125,0.078125,0.078125,0.078125,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,mttr_seconds,1,0.250395,0.250395,0.250395,0.250395,Descriptive bootstrap interval; not a substitute for independent replication

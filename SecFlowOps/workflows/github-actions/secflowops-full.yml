@@ -1,0 +1,54 @@
+name: SecFlowOps full pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "SecFlowOps repository under SecFlowOps/repos"
+        required: true
+        default: "sample_api"
+
+permissions:
+  contents: write
+  pull-requests: write
+  security-events: write
+
+jobs:
+  secflowops:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install requirements
+        run: python -m pip install -r SecFlowOps/artifact/requirements.txt
+
+      - name: Check tools
+        run: python SecFlowOps/scripts/check_tools.py
+
+      - name: Run SecFlowOps C5 once
+        run: |
+          python SecFlowOps/scripts/run_matrix.py \
+            --campaign-id github_actions_manual_${{ github.run_id }} \
+            --repo ${{ inputs.repo }} \
+            --scenario github_actions_manual \
+            --configs C5_SecFlowOps \
+            --repetitions 1
+
+      - name: Compute metrics
+        run: python SecFlowOps/scripts/compute_metrics.py
+
+      - name: Upload SecFlowOps artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: secflowops-full-artifacts
+          path: |
+            SecFlowOps/data/raw/
+            SecFlowOps/data/normalized/
+            SecFlowOps/data/processed/
+            SecFlowOps/tables/

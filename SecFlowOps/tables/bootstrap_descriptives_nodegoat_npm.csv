@@ -1,0 +1,26 @@
+configuration,metric,n,mean,median,bootstrap_ci95_low,bootstrap_ci95_high,note
+C1_NonBlockingScanning,pipeline_time_seconds,3,19.619907933306724,19.420716299966443,18.68440439994447,20.754603100009263,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,recall,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,precision,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,auto_remediation_rate,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,mttr_seconds,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C2_AutoScanning,pipeline_time_seconds,3,19.266798833326902,19.629869299998973,17.581677999987733,20.588849199994,Descriptive bootstrap interval; not a substitute for independent replication
+C2_AutoScanning,recall,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C2_AutoScanning,precision,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C2_AutoScanning,auto_remediation_rate,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C2_AutoScanning,mttr_seconds,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C3_PolicyOnly,pipeline_time_seconds,3,24.24955806667761,21.464554800011683,18.215972499980126,33.06814690004103,Descriptive bootstrap interval; not a substitute for independent replication
+C3_PolicyOnly,recall,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C3_PolicyOnly,precision,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C3_PolicyOnly,auto_remediation_rate,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C3_PolicyOnly,mttr_seconds,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,pipeline_time_seconds,3,95.6619820666577,92.03380059998017,89.94202119996771,105.01012440002523,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,recall,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,precision,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,auto_remediation_rate,3,0.02564102564102564,0.02564102564102564,0.02564102564102564,0.02564102564102564,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,mttr_seconds,3,42.18526966666666,43.792508,35.32326,47.440041,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,pipeline_time_seconds,3,96.30241500000314,82.34700700000394,78.67813220003154,127.88210579997394,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,recall,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,precision,3,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,auto_remediation_rate,3,0.02564102564102564,0.02564102564102564,0.02564102564102564,0.02564102564102564,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,mttr_seconds,3,44.777811,31.934435,31.423853,70.975145,Descriptive bootstrap interval; not a substitute for independent replication

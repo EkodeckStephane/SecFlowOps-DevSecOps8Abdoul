@@ -1,0 +1,13 @@
+updates:
+  - ecosystem: pip
+    file: requirements.txt
+    package: django
+    from: "2.2.0"
+    to: "4.2.30"
+    risk_level: R0
+  - ecosystem: pip
+    file: requirements.txt
+    package: requests
+    from: "2.19.1"
+    to: "2.33.0"
+    risk_level: R0

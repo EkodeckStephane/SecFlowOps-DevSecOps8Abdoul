@@ -1,0 +1,9 @@
+policy_set: secflowops_default
+version: 0.1.0
+rego: policies/rego/secflowops.rego
+defaults:
+  critical_tolerance: 0
+  high_threshold: 3
+  cvss_ceiling: 9.0
+  block_on_secret: true
+  min_coverage: 0.80

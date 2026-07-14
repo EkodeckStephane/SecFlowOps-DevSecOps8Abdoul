@@ -1,0 +1,6 @@
+repo,category,review_status,true_positive,n_findings
+external_dvna,iac,reviewed_static_evidence,true,2
+external_flask,sca,reviewed_static_evidence,true,13
+external_nodegoat,iac,reviewed_static_evidence,true,1
+external_nodegoat,sca,reviewed_static_evidence,true,65
+external_nodegoat,secret,reviewed_static_evidence,true,1

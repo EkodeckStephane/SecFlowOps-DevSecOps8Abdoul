@@ -1,0 +1,65 @@
+[
+  {
+    "tool": "python",
+    "available": true,
+    "path": "C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python313\\python.EXE",
+    "version": "Python 3.13.5",
+    "error": null
+  },
+  {
+    "tool": "git",
+    "available": true,
+    "path": "C:\\Program Files\\Git\\cmd\\git.EXE",
+    "version": "git version 2.51.2.windows.1",
+    "error": null
+  },
+  {
+    "tool": "docker",
+    "available": true,
+    "path": "C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.EXE",
+    "version": "Docker version 29.6.1, build 8900f1d",
+    "error": null
+  },
+  {
+    "tool": "java",
+    "available": true,
+    "path": "C:\\Program Files\\Java\\jdk-24\\bin\\java.exe",
+    "version": "java version \"24.0.1\" 2025-04-15 | Java(TM) SE Runtime Environment (build 24.0.1+9-30) | Java HotSpot(TM) 64-Bit Server VM (build 24.0.1+9-30, mixed mode, sharing)",
+    "error": null
+  },
+  {
+    "tool": "trivy",
+    "available": true,
+    "path": "C:\\Users\\User\\AppData\\Local\\Microsoft\\WinGet\\Packages\\AquaSecurity.Trivy_Microsoft.Winget.Source_8wekyb3d8bbwe\\trivy.EXE",
+    "version": "Version: 0.71.2 | Vulnerability DB: |   Version: 2",
+    "error": null
+  },
+  {
+    "tool": "opa",
+    "available": true,
+    "path": "C:\\Users\\User\\Downloads\\Compressed\\DevSecOps8Abdoul\\SecFlowOps\\tools\\opa.exe",
+    "version": "Version: 1.18.2 | Build Commit: e695c9ef8edb0f8b9f13d014d7bc8a7fbcc57297-dirty | Build Timestamp: 2026-07-02T13:14:00Z",
+    "error": null
+  },
+  {
+    "tool": "semgrep",
+    "available": true,
+    "path": "C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\semgrep.EXE",
+    "version": "1.169.0",
+    "error": null
+  },
+  {
+    "tool": "gitleaks",
+    "available": true,
+    "path": "C:\\Users\\User\\Downloads\\Compressed\\DevSecOps8Abdoul\\SecFlowOps\\tools\\gitleaks\\gitleaks.exe",
+    "version": "8.30.1",
+    "error": null
+  },
+  {
+    "tool": "zap",
+    "available": true,
+    "path": "C:\\Users\\User\\Downloads\\Compressed\\DevSecOps8Abdoul\\SecFlowOps\\tools\\zap\\ZAP_2.17.0\\zap-2.17.0.jar",
+    "version": "2.17.0",
+    "error": null
+  }
+]

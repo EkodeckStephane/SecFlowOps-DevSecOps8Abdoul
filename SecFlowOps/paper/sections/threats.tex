@@ -1,0 +1,13 @@
+\section{Threats to Validity}
+
+The controlled campaign uses generated repositories and deterministic patches. The ground truth is injected by construction and does not represent natural project diversity.
+
+The external campaign improves external validity by using five real open-source repositories and a first-pass static adjudication of 82 findings. This adjudication verifies repository evidence but is not an independent audit of every CVE status and does not validate application-level exploitability. Recall over naturally occurring external vulnerabilities is not claimed because no complete independent ground truth exists for the external repositories.
+
+The injected external campaign provides complete ground truth only for the injected findings, not for every vulnerability that may naturally exist in the base repositories. External campaigns use build mode \texttt{skip}: they measure security-pipeline behavior, but they do not prove that remediated third-party applications still pass their full project-specific test suites. The NodeGoat npm remediation uses non-breaking \texttt{npm audit fix}; remaining findings require breaking upgrades, replacement of unmaintained packages, or manual redesign.
+
+The toolchain is time-sensitive because scanner databases, npm advisory metadata, and package-manager resolution behavior change. Tool versions and checksums are recorded in the artifact, but future runs may produce different vulnerability counts as advisory databases evolve.
+
+The controlled precision estimate treats scanner findings not linked to injected ground truth as unknown or false-positive candidates. The external adjudication improves this point for the reviewed findings, but it remains a static first-pass review rather than a blinded multi-reviewer audit. Stronger claims about external false-positive rates require independent reviewers and a broader corpus.
+
+GitHub Actions workflow files are provided, but this workspace is not a valid Git repository and the GitHub CLI is not authenticated. Therefore, remote GitHub Actions execution and real pull-request creation were not performed. Local remediation patches copied workspaces and recorded \texttt{pr\_created=false}; claims about PR review latency or human acceptance are not made.

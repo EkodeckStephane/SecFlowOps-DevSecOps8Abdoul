@@ -1,0 +1,2 @@
+configuration,repo,n_runs,mean_pipeline_time_seconds,mean_npm_audit_seconds,mean_initial_total,mean_initial_critical,mean_initial_high,mean_initial_secret,mean_residual_total,mean_residual_critical,mean_residual_high,mean_residual_secret,mean_resolved_total,mean_resolved_critical,mean_resolved_high,mean_resolved_secret,mean_tool_failure_count
+B1_NpmAuditOnly,external_nodegoat,3,104.51778130000457,51.077746666657426,78.0,10.0,40.0,1.0,32.0,3.0,13.0,1.0,46.0,7.0,27.0,0.0,0.0

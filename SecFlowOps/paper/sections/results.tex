@@ -1,0 +1,67 @@
+\section{Security Results}
+
+The generated tables are stored in \texttt{SecFlowOps/tables}. Table~\ref{tab:security-summary} summarizes the main security outcomes across the controlled, external, NodeGoat, and injected-external studies.
+
+\begin{table*}[t]
+\centering
+\caption{Main security outcomes. Counts are means when several repositories or repetitions are aggregated.}
+\label{tab:security-summary}
+\begin{tabular}{p{0.20\linewidth}rrrrp{0.24\linewidth}}
+\toprule
+Study and configuration & Runs & Success & Initial & Residual & Main interpretation \\
+\midrule
+Controlled C1 & 15 & 15 & 64.0 & 64.0 & Scanner-only baseline; injected-ground-truth recall was 1.0. \\
+Controlled C5 & 15 & 15 & 64.0 & 16.0 & Critical findings and secrets were reduced to zero; two high Kubernetes hardening findings remained per run. \\
+External C1 & 15 & 15 & 18.6 & 18.6 & Natural OSS scan without remediation. \\
+External C5 & 15 & 12 & 18.6 & 15.4 & Flask and DVNA findings were remediated; NodeGoat was denied by policy. \\
+NodeGoat C5 & 3 & 0 & 78.0 & 31.0 & npm remediation and secret removal were partial; policy denial remained correct. \\
+Injected external C5 & 9 & 9 & 68.3 & 16.0 & Injected-ground-truth recall was 1.0 and residual injected findings were zero. \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+In the expanded controlled campaign, five generated repositories were evaluated across six configurations and three repetitions, for 90 runs. The policy-only configuration was blocked in all 15 runs, while the combined SecFlowOps configuration passed in all 15 runs after local remediation and OPA evaluation. For SecFlowOps runs, residual critical findings and residual secrets were reduced to zero. Two high-severity Kubernetes hardening findings remained in each run and were permitted by the configured policy threshold.
+
+The full protocol campaign executed 432/432 planned local runs. Each configuration has 72 runs. Pipeline success was 72/72 for C0, C1, C2, C4, and C5, and 45/72 for C3 because policy-only correctly denied vulnerable raw findings. Mean residual findings decreased from 28.0 in scan-only configurations to 16.0 in C4 and C5. Mean recall was 0.795 in the 432-run campaign because DAST ground-truth rows were included before ZAP was enabled in that campaign. A subsequent targeted ZAP probe produced real ZAP JSON output and matched the reflected-XSS DAST ground truth with severity high.
+
+In the external campaign, 75 runs were executed with no tool failures. Non-blocking scanning, automatic scanning, and agents-only execution passed in 15/15 runs. Policy-only and SecFlowOps each passed in 12/15 runs; the failed runs were policy denials on OWASP NodeGoat. The external campaign produced 82 unique findings and a first-pass static adjudication table. Under this adjudication, SecFlowOps resolved 13/13 Flask example dependency findings, 2/2 DVNA Dockerfile hardening findings, and the NodeGoat repository-stored private key.
+
+Table~\ref{tab:nodegoat-npm} isolates the hardest external repository. The added npm-only baseline shows that \texttt{npm audit fix --package-lock-only --omit=dev} resolves many NodeGoat dependency advisories but leaves the repository secret untouched. SecFlowOps reaches a slightly lower residual count because it also removes the committed private key. Residual findings still include 3 critical and 12 high findings, so SecFlowOps remained blocked by policy in all three combined runs.
+
+\begin{table}[t]
+\centering
+\caption{NodeGoat npm remediation and policy outcome.}
+\label{tab:nodegoat-npm}
+\begin{tabular}{lrrrrl}
+\toprule
+Configuration & Total & Crit. & High & Secrets & Policy \\
+\midrule
+C1 scanner only & 78 & 10 & 40 & 1 & N/A \\
+B1 npm audit only & 32 & 3 & 13 & 1 & N/A \\
+C4 agents only & 31 & 3 & 12 & 0 & N/A \\
+C5 SecFlowOps & 31 & 3 & 12 & 0 & Deny \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The injected external recall study completed 27/27 runs successfully. Table~\ref{tab:injected-recall} distinguishes detection from remediation. Recall against injected ground truth was 1.0 for all evaluated configurations. For SecFlowOps, all nine runs ended with zero residual critical findings, zero residual secrets, and zero residual injected ground-truth findings.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Injected-external recall and remediation.}
+\label{tab:injected-recall}
+\begin{tabular}{@{}lcccp{2.35cm}@{}}
+\toprule
+Configuration & Runs & Recall & Resid. GT & Outcome \\
+\midrule
+C1 scanner only & 9 & 1.0 & N/A & Detection only \\
+C4 agents only & 9 & 1.0 & 0 & Injected findings remediated \\
+C5 SecFlowOps & 9 & 1.0 & 0 & Remediated and policy-passed \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Precision Interpretation}
+
+We report three distinct notions that should not be merged. First, controlled and injected-external recall are measured against known injected ground truth. Second, the conservative precision field in the generated summary tables treats all non-ground-truth scanner findings as unknown or false-positive candidates; for the injected external study this yields a mean precision of 0.088 because real repository hardening and dependency findings coexist with the injected findings. This number is therefore a lower-bound bookkeeping measure, not a claim that contemporary scanners are mostly wrong. Third, the external adjudication table reviewed 82 unique naturally occurring findings by static repository evidence; within that reviewed subset, adjudicated precision was 1.0 for runs with adjudicated findings. This is not an independent exploitability audit and is not used to claim complete recall over naturally occurring external vulnerabilities.

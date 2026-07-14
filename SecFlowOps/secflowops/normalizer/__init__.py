@@ -1,0 +1,2 @@
+"""Scanner output normalization helpers."""
+

@@ -1,0 +1,16 @@
+configuration,metric,n,mean,median,bootstrap_ci95_low,bootstrap_ci95_high,note
+C1_NonBlockingScanning,pipeline_time_seconds,9,18.154986455545036,18.174269600014668,17.453774144433233,18.967301511095783,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,recall,9,1.0,1.0,1.0,1.0,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,precision,9,0.08847402597402597,0.09375,0.08319805194805195,0.09199134199134198,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,auto_remediation_rate,9,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C1_NonBlockingScanning,mttr_seconds,9,0.0,0.0,0.0,0.0,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,pipeline_time_seconds,9,35.81834077776875,35.45967339997878,35.126672977769175,36.51189933332434,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,recall,9,1.0,1.0,1.0,1.0,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,precision,9,0.08847402597402597,0.09375,0.08319805194805195,0.09199134199134198,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,auto_remediation_rate,9,0.07805735930735931,0.078125,0.07798971861471861,0.0781024531024531,Descriptive bootstrap interval; not a substitute for independent replication
+C4_AgentsOnly,mttr_seconds,9,0.014463444444444445,0.0,0.004649,0.02883,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,pipeline_time_seconds,9,35.519415844438804,35.49588369997218,34.82021216665291,36.259628511111565,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,recall,9,1.0,1.0,1.0,1.0,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,precision,9,0.08847402597402597,0.09375,0.08319805194805195,0.09199134199134198,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,auto_remediation_rate,9,0.07805735930735931,0.078125,0.07798971861471861,0.0781024531024531,Descriptive bootstrap interval; not a substitute for independent replication
+C5_SecFlowOps,mttr_seconds,9,0.012051888888888888,0.0,0.0034194444444444446,0.02380811111111111,Descriptive bootstrap interval; not a substitute for independent replication

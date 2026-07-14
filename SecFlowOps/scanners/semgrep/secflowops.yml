@@ -1,0 +1,22 @@
+rules:
+  - id: secflowops.reflected-html
+    languages: [python]
+    severity: WARNING
+    message: "Potential reflected HTML response without escaping"
+    metadata:
+      cwe: "CWE-79"
+      category: security
+    patterns:
+      - pattern: |
+          body = f"<html><body>Search: {query}</body></html>"
+
+  - id: secflowops.formatted-sql
+    languages: [python]
+    severity: ERROR
+    message: "Potential SQL injection via formatted query"
+    metadata:
+      cwe: "CWE-89"
+      category: security
+    patterns:
+      - pattern: |
+          query = f"SELECT name FROM users WHERE name = '{$USERNAME}'"

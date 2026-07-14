@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SecFlowOps normalized finding",
+  "type": "object",
+  "required": [
+    "finding_id",
+    "tool",
+    "category",
+    "repo",
+    "commit",
+    "file",
+    "severity",
+    "message",
+    "fingerprint",
+    "remediated"
+  ],
+  "properties": {
+    "finding_id": {"type": "string"},
+    "tool": {"type": "string"},
+    "category": {"type": "string"},
+    "repo": {"type": "string"},
+    "commit": {"type": "string"},
+    "file": {"type": ["string", "null"]},
+    "line_start": {"type": ["integer", "null"]},
+    "line_end": {"type": ["integer", "null"]},
+    "cwe": {"type": ["string", "null"]},
+    "cve": {"type": ["string", "null"]},
+    "severity": {"type": "string"},
+    "cvss": {"type": ["number", "null"]},
+    "message": {"type": "string"},
+    "fingerprint": {"type": "string"},
+    "is_ground_truth": {"type": ["boolean", "null"]},
+    "is_false_positive": {"type": ["boolean", "null"]},
+    "ground_truth_id": {"type": ["string", "null"]},
+    "remediated": {"type": "boolean"},
+    "remediation_method": {"type": "string"},
+    "timestamps": {"type": "object"}
+  }
+}

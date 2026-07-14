@@ -1,0 +1,8 @@
+title = "SecFlowOps controlled gitleaks config"
+
+[[rules]]
+id = "secflowops-fake-aws-access-key"
+description = "AWS access key pattern, test secrets only"
+regex = '''AKIA[0-9A-Z]{16}'''
+secretGroup = 0
+tags = ["key", "AWS", "secflowops-test"]

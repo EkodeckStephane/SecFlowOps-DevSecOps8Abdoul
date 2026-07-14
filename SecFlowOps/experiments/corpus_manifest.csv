@@ -1,0 +1,6 @@
+repo_id,origin,scenario,stack,size_class,benign_python_files,doc_files,file_count,loc,ground_truth_findings,notes
+controlled_api_s,generated_controlled,controlled_multi_layer,python;pip;docker;kubernetes,small,0,2,10,122,6,Same injected security findings; benign files vary scanner workload size.
+controlled_api_m,generated_controlled,controlled_multi_layer,python;pip;docker;kubernetes,medium,10,10,28,206,6,Same injected security findings; benign files vary scanner workload size.
+controlled_api_l,generated_controlled,controlled_multi_layer,python;pip;docker;kubernetes,large,25,25,58,341,6,Same injected security findings; benign files vary scanner workload size.
+controlled_api_xl,generated_controlled,controlled_multi_layer,python;pip;docker;kubernetes,xlarge,50,50,108,566,6,Same injected security findings; benign files vary scanner workload size.
+controlled_api_xxl,generated_controlled,controlled_multi_layer,python;pip;docker;kubernetes,xxlarge,100,100,208,1016,6,Same injected security findings; benign files vary scanner workload size.

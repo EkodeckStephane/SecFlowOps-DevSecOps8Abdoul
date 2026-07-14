@@ -1,0 +1,4 @@
+repo_id,base_repo,origin_type,scenario,stack,file_count,loc,ground_truth_findings,notes
+injected_requests,external_requests,injected_external_real_base,injected_external_real_base,python;pip;docker;kubernetes,136,19544,6,Real open-source base repository with controlled injected SecFlowOps findings.
+injected_flask,external_flask,injected_external_real_base,injected_external_real_base,python;pip;docker;kubernetes,242,36516,6,Real open-source base repository with controlled injected SecFlowOps findings.
+injected_express,external_express,injected_external_real_base,injected_external_real_base,javascript;npm;python;pip;docker;kubernetes,219,26780,6,Real open-source base repository with controlled injected SecFlowOps findings.

@@ -1,0 +1,38 @@
+name: SecFlowOps controlled pipeline
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  secflowops-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Python artifact dependencies
+        run: python -m pip install -r SecFlowOps/artifact/requirements.txt
+
+      - name: Install Trivy
+        shell: pwsh
+        run: winget install --id AquaSecurity.Trivy --exact --accept-package-agreements --accept-source-agreements
+
+      - name: Run SecFlowOps smoke campaign
+        shell: pwsh
+        run: ./SecFlowOps/artifact/run_smoke.ps1
+
+      - name: Upload SecFlowOps artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: secflowops-smoke-artifacts
+          path: |
+            SecFlowOps/data/raw
+            SecFlowOps/data/normalized
+            SecFlowOps/data/processed
+            SecFlowOps/tables
+            SecFlowOps/figures
+            SecFlowOps/artifact/tool_status.json
