@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Controlled vulnerable API for SecFlowOps experiments.
+"""Controlled API for SecFlowOps experiments.
 
-This app is intentionally simple and intentionally contains defensive test
-findings. It must not be exposed to the public internet.
+This app is intentionally simple and includes endpoints used by the local
+scanner and remediation workflow. It must not be exposed to the public internet.
 """
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -12,13 +12,13 @@ import html
 
 
 def render_search_response(query: str) -> str:
-    # Intentional SAST finding: reflected unescaped user input for scanner tests.
+    # Remediated PR probe: reflected output is escaped before rendering.
     body = f"<html><body>Search: {html.escape(query)}</body></html>"
     return body
 
 
 def unsafe_user_lookup(username: str) -> list[tuple]:
-    # Intentional SAST finding: string-formatted SQL query for scanner tests.
+    # Remediated PR probe: user input is passed as a query parameter.
     conn = sqlite3.connect(":memory:")
     conn.execute("CREATE TABLE users (name TEXT)")
     conn.execute("INSERT INTO users VALUES ('alice')")
