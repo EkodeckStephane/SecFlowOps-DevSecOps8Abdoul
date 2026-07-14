@@ -1,0 +1,31 @@
+{
+  "auto_merge": false,
+  "branch_created": "local-only-no-git-push",
+  "events": [
+    {
+      "file": "app.py",
+      "finding_id": "ci-pr-probe-sast-xss",
+      "ground_truth_id": "GT-CI-PR-SAST-XSS",
+      "human_review_required": true,
+      "method": "rule_based_agent",
+      "status": "patched_local_workspace"
+    }
+  ],
+  "finished_at": "2026-07-14T00:55:51.944094+00:00",
+  "input_findings": 1,
+  "mode": "local_workspace_patch",
+  "npm_audit_fix": null,
+  "patched_files": [
+    "app.py"
+  ],
+  "pr_created": false,
+  "remediated_count": 1,
+  "started_at": "2026-07-14T00:55:51.708504+00:00",
+  "tests": {
+    "command": "python -m unittest discover -s tests",
+    "mode": "python_unittest",
+    "returncode": 0,
+    "stderr": "..\n----------------------------------------------------------------------\nRan 2 tests in 0.007s\n\nOK\n",
+    "stdout": ""
+  }
+}
