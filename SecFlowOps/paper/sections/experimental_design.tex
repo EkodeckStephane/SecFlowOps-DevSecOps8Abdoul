@@ -2,7 +2,7 @@
 
 Table~\ref{tab:campaigns} summarizes the campaigns. The controlled campaign evaluates six configurations: build only, non-blocking scanning, automatic scanning, policy only, agents only, and the combined SecFlowOps configuration. Five generated repositories inject SAST, SCA, secret, Docker, and Kubernetes findings with explicit ground-truth files. Each controlled repository is evaluated three times, yielding 90 runs.
 
-The full protocol campaign materializes the preregistered local design: three repository families, eight scenarios, six configurations, and three repetitions, yielding 432 runs. The eight scenarios are clean, vulnerable dependency, fake secret, reflected XSS, SQL injection, Docker misconfiguration, Kubernetes misconfiguration, and multi-layer. This campaign was completed before ZAP was enabled in the runner; ZAP is therefore evaluated in a separate targeted DAST probe.
+The full protocol campaign executes the complete local design: three repository families, eight scenarios, six configurations, and three repetitions, yielding 432 runs. The eight scenarios are clean, vulnerable dependency, fake secret, reflected XSS, SQL injection, Docker misconfiguration, Kubernetes misconfiguration, and multi-layer. The 432-run protocol records the DAST scenario as ground truth, while executable ZAP coverage is measured in a separate targeted DAST probe to avoid merging a focused runtime validation with the full local protocol.
 
 The external campaign evaluates five configurations, non-blocking scanning, automatic scanning, policy only, agents only, and the combined SecFlowOps configuration, on five open-source repositories: Requests, Flask, Express, OWASP NodeGoat, and DVNA. Each external repository is evaluated three times, yielding 75 runs. The external campaign uses \texttt{--build-mode skip} to avoid confounding security-pipeline behavior with project-specific dependency installation and test setup.
 
@@ -18,7 +18,7 @@ Two focused campaigns address external validity gaps. A NodeGoat npm study repea
 Campaign & Corpus & Runs & Reps & Purpose \\
 \midrule
 Controlled & five generated API variants & 90 & 3 & End-to-end behavior with injected ground truth and controlled size variation. \\
-Full protocol & 24 generated scenario repositories & 432 & 3 & Preregistered local design: three families, eight scenarios, six configurations, and three repetitions. \\
+Full protocol & 24 generated scenario repositories & 432 & 3 & Complete local design: three families, eight scenarios, six configurations, and three repetitions. \\
 External OSS & Requests, Flask, Express, NodeGoat, DVNA & 75 & 3 & Scanner, remediation, adjudication, policy, and performance behavior on real repositories. \\
 NodeGoat npm & OWASP NodeGoat & 15+3 & 3 & Scanner-only, npm-audit-only, agents-only, and SecFlowOps behavior on a difficult npm dependency graph. \\
 Injected external & Requests, Flask, Express copies with injected findings & 27 & 3 & Recall and residual target findings where complete injected ground truth exists in real repository contexts. \\

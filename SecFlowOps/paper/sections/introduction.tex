@@ -2,6 +2,14 @@
 
 DevSecOps pipelines often combine scanners, dependency updates, local patches, and deployment gates, but empirical claims about these combinations are difficult to audit. A scanner-only pipeline can find issues without changing delivery behavior. A remediation pipeline can edit code without proving that the residual state satisfies an explicit policy. A policy gate can block delivery without showing whether remediation actually reduced risk.
 
-SecFlowOps is an executable evaluation artifact for this gap. It compares configurations ranging from scanning-only execution to scanner, remediation, rescan, and OPA-based policy enforcement. The contribution is not a new vulnerability scanner. It is a reproducible protocol for measuring how scanner findings move through remediation and policy gates, including cases where the correct outcome is refusal rather than delivery.
+SecFlowOps is designed around this missing unit of analysis: the trajectory of a security finding from initial detection, through remediation and rescan, to a policy decision over the residual state. The contribution is not a new vulnerability scanner and not an autonomous repair system. It is a reproducible framework for evaluating DevSecOps pipeline configurations under common scanner, remediation, and gate workloads, including cases where the appropriate outcome is policy denial rather than delivery.
 
-This revision addresses four reviewer-facing weaknesses. First, it adds result tables that connect campaign design, residual findings, and performance. Second, it separates injected-ground-truth recall from conservative scanner-output precision and static adjudication. Third, it adds baselines, including npm-audit-only remediation on NodeGoat. Fourth, it expands the paper from a smoke-run description into a fuller artifact evaluation with limitations stated at the level supported by the experiments.
+The paper asks three research questions. RQ1 asks whether SecFlowOps detects and removes injected ground-truth findings under controlled and real-repository contexts. RQ2 asks how scanner-only, remediation-only, policy-only, and combined configurations differ in residual findings and policy outcomes on generated and open-source repositories. RQ3 asks what runtime overhead is introduced by remediation, rescanning, npm-based dependency updates, DAST execution, and OPA policy evaluation.
+
+The main contributions are as follows:
+\begin{enumerate}
+\item a finding-trajectory measurement model that records initial findings, residual findings, ground-truth matches where complete ground truth exists, remediation traces, and OPA delivery decisions;
+\item an executable DevSecOps evaluation framework that integrates Trivy, Semgrep, Gitleaks, npm audit, OWASP ZAP, and OPA without treating any single tool as proof of system security;
+\item an empirical evaluation over controlled, open-source, NodeGoat, injected-external, and DAST-focused campaigns, with security outcomes and performance costs reported separately;
+\item a reproducibility package containing scripts, raw outputs, processed metrics, summary tables, checksums, tool status, and remote GitHub Actions and pull-request evidence.
+\end{enumerate}
