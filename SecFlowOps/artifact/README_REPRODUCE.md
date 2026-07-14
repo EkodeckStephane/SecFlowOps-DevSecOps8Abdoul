@@ -137,8 +137,19 @@ This script copies real OSS repositories, injects controlled SecFlowOps findings
 - Injected external recall metrics: `SecFlowOps/tables/summary_metrics_injected_external.csv`, `SecFlowOps/tables/performance_by_config_injected_external.csv`, `SecFlowOps/tables/bootstrap_descriptives_injected_external.csv`
 - Full protocol metrics: `SecFlowOps/tables/summary_metrics_full_protocol.csv`, `SecFlowOps/tables/performance_by_config_full_protocol.csv`, `SecFlowOps/tables/ablation_results_full_protocol.csv`, `SecFlowOps/tables/policy_sensitivity_full_protocol.csv`
 - ZAP DAST probe metrics: `SecFlowOps/tables/summary_metrics_zap_probe_matched.csv`, `SecFlowOps/tables/performance_by_config_zap_probe_matched.csv`
+- GitHub Actions and PR evidence: `SecFlowOps/experiments/github_actions_evidence.md`
 - Figures: `SecFlowOps/figures/*.png`
+
+## Remote GitHub Actions and PR Evidence
+
+A private GitHub repository was created for remote validation:
+
+```text
+https://github.com/EkodeckStephane/SecFlowOps-DevSecOps8Abdoul
+```
+
+The remote CI workflow passed on `main`, and a real remediation PR was opened from the user-pushed branch `secflowops/user-remediation-pr`. The PR CI passed on pull request `#2`. Exact run IDs, job URLs, branch names, and the remediation commit are recorded in `SecFlowOps/experiments/github_actions_evidence.md`.
 
 ## Scope Limitation
 
-The smoke campaign is useful to validate the pipeline implementation, data schema, and measurement workflow. The expanded controlled study adds corpus size variation, repetitions, and performance measurement. The full protocol study executes the 432-run local controlled design. The external study adds real open-source repositories and an adjudication workflow. The NodeGoat npm study measures partial real npm remediation. The injected external study provides measurable recall for injected findings on real repository bases, but it is not a complete census of all naturally occurring vulnerabilities in those repositories. GitHub Actions workflows and PR creation require a valid GitHub repository and authenticated `gh` session; this workspace does not currently provide those prerequisites.
+The smoke campaign is useful to validate the pipeline implementation, data schema, and measurement workflow. The expanded controlled study adds corpus size variation, repetitions, and performance measurement. The full protocol study executes the 432-run local controlled design. The external study adds real open-source repositories and an adjudication workflow. The NodeGoat npm study measures partial real npm remediation. The injected external study provides measurable recall for injected findings on real repository bases, but it is not a complete census of all naturally occurring vulnerabilities in those repositories. The GitHub Actions/PR evidence validates remote CI execution and pull-request creation, but it does not measure human review quality, merge acceptance, review latency, or production deployment after merge.
