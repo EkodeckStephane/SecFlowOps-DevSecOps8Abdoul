@@ -97,6 +97,7 @@ RQ & Evidence & Answer \\
 RQ1 & Injected-external runs reached recall 1.0 and C5 ended with zero residual injected findings; the targeted ZAP probe produced ZAP JSON output and matched reflected-XSS ground truth. & Supported for injected findings and the ZAP probe. Not claimed for complete natural-vulnerability recall on external codebases. \\
 RQ2 & In the 432-run protocol, mean residual findings decreased from 28.0 in scan-only configurations to 16.0 in C4/C5. NodeGoat remained denied because residual critical and high findings survived npm remediation. & Combined scan-remediate-rescan-policy evaluation distinguishes reduction from acceptable delivery; policy denial is a measured outcome, not a tool failure. \\
 RQ3 & Full-protocol C5 mean runtime was 43.749 s versus 22.061 s for C1; NodeGoat C5 mean runtime was 96.302 s versus 19.620 s for C1. OPA evaluation was below scanner and remediation costs in the controlled and external campaigns. & The dominant costs are rescanning and npm remediation, not policy evaluation, in the reported environment. \\
+RQ4 & The calibrated simulation over 72 matched full-protocol C1/C5 finding populations increases allow rate from 0.625 at $q=0$ to 0.722 at $q=0.75$ and 1.0 at $q=1$. & The policy result is sensitive to whether empirically removable findings are actually removed; partial remediation does not reproduce the full SecFlowOps outcome under the reported gate. \\
 \bottomrule
 \end{tabular}
 \end{table*}
