@@ -1,26 +1,26 @@
 \section{Experimental Design}
 
-Table~\ref{tab:configs} defines the configurations used in the experiments. The notation is used consistently in the results tables and figures.
+Table~\ref{tab:configs} defines the configurations used in the experiments. Figure~\ref{fig:pipeline-architecture} is the superset workflow; each configuration activates a specific path through that workflow. The identifier names the workflow variant, while prefixes such as ``Controlled C1'' or ``External C1'' name the campaign in which the same C1 variant is executed. Result-table labels such as ``C1 scanner only'' are descriptive aliases for the same non-blocking scanner configuration.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
 \footnotesize
-\caption{Pipeline configurations.}
+\caption{Pipeline configurations and active workflow stages.}
 \label{tab:configs}
-\begin{tabular}{@{}lp{0.70\linewidth}@{}}
+\begin{tabular}{@{}lp{0.43\linewidth}p{0.43\linewidth}@{}}
 \toprule
-ID & Definition \\
+ID & Active workflow path & Stages intentionally absent or interpretation \\
 \midrule
-C0 & Build or test only; no security scanner, remediator, rescan, or policy gate. \\
-C1 & Non-blocking scanner execution; findings are measured but delivery is not blocked. \\
-C2 & Scanner execution in automatic mode without remediation or policy decision. \\
-C3 & Policy-only gate over raw findings; no remediation before the decision. \\
-C4 & Remediation agents and post-remediation rescan; no OPA gate. \\
-C5 & Combined SecFlowOps: scan, remediate, rescan, and OPA policy gate. \\
-B1 & npm-audit-only NodeGoat baseline without SecFlowOps secret remediation or OPA gate. \\
+C0 & Codebase copy and build/test mode only. & No security scanner, normalizer output, remediator, post-remediation rescan, or policy gate. \\
+C1 & Codebase copy, initial scanners, normalizer, and run metrics. & No remediation, no post-remediation rescan, and no OPA gate. Residual findings equal initial findings; delivery is not blocked. \\
+C2 & Codebase copy, automatic scanner mode, normalizer, and run metrics. & No remediation and no OPA gate; this isolates scanner automation behavior from policy enforcement. \\
+C3 & Codebase copy, initial scanners, normalizer, raw-finding policy gate, and run metrics. & No remediation and no post-remediation rescan; OPA decides over raw findings. \\
+C4 & Codebase copy, initial scanners, normalizer, bounded remediation, post-remediation rescan, and run metrics. & No OPA gate; this isolates whether remediation reduces residual findings before delivery policy is applied. \\
+C5 & Codebase copy, initial scanners, normalizer, bounded remediation, post-remediation rescan, OPA gate, and run metrics. & Full SecFlowOps path; policy may deny delivery even when the experimental run succeeds. \\
+B1 & NodeGoat package-manager remediation using \texttt{npm audit fix --package-lock-only --omit=dev}, followed by npm audit metrics. & No SecFlowOps secret remediation and no OPA gate; used only as a package-manager baseline. \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Table~\ref{tab:campaigns} summarizes the campaigns. The controlled campaign evaluates six configurations: build only, non-blocking scanning, automatic scanning, policy only, agents only, and the combined SecFlowOps configuration. Five generated codebases inject SAST, SCA, secret, Docker, and Kubernetes findings with explicit ground-truth labels. Each controlled codebase is evaluated three times, yielding 90 runs.
 

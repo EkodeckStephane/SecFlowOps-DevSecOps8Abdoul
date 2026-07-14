@@ -25,7 +25,7 @@ node distance=7mm and 6mm
 \draw[arrow] (remediate) -- (scan2);
 \draw[arrow] (scan2) -- (policy);
 \draw[arrow] (truth) -- (norm);
-\draw[arrow] (scan1) |- (metrics);
+\draw[arrow] (scan1.south) |- (metrics.south west);
 \draw[arrow] (scan2) |- (metrics);
 \draw[arrow] (policy) |- (metrics);
 \end{tikzpicture}
