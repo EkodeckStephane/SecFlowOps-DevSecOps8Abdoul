@@ -33,13 +33,20 @@ TOOL_TIMEOUTS = {
 def tool_environment() -> dict[str, str]:
     env = os.environ.copy()
     semgrep_home = ROOT / "artifact" / "semgrep_home"
+    semgrep_cache = ROOT / "artifact" / "semgrep_cache"
     trivy_cache = ROOT / "artifact" / "trivy_cache"
+    zap_home = ROOT / "artifact" / "zap_home"
     semgrep_home.mkdir(parents=True, exist_ok=True)
+    semgrep_cache.mkdir(parents=True, exist_ok=True)
     trivy_cache.mkdir(parents=True, exist_ok=True)
+    zap_home.mkdir(parents=True, exist_ok=True)
     env.setdefault("XDG_CONFIG_HOME", str(semgrep_home))
+    env.setdefault("XDG_CACHE_HOME", str(semgrep_cache))
     env.setdefault("SEMGREP_LOG_FILE", str(semgrep_home / "semgrep.log"))
     env.setdefault("SEMGREP_SETTINGS_FILE", str(semgrep_home / "settings.yml"))
+    env.setdefault("SEMGREP_VERSION_CACHE_PATH", str(semgrep_cache / "semgrep_version"))
     env.setdefault("TRIVY_CACHE_DIR", str(trivy_cache))
+    env.setdefault("ZAP_HOME", str(zap_home))
     return env
 
 
@@ -62,7 +69,9 @@ def resolve_executable(command: list[str]) -> str | None:
         zap_dir = ROOT / "tools" / "zap" / "ZAP_2.17.0"
         zap_jar = zap_dir / "zap-2.17.0.jar"
         if java_exe and zap_jar.exists():
-            command[:] = [java_exe, "-jar", str(zap_jar), "-version"]
+            zap_home = ROOT / "artifact" / "zap_home"
+            zap_home.mkdir(parents=True, exist_ok=True)
+            command[:] = [java_exe, "-jar", str(zap_jar), "-cmd", "-dir", str(zap_home), "-version"]
             return str(zap_jar)
     local_names = {
         "opa": ROOT / "tools" / "opa.exe",
@@ -87,7 +96,7 @@ def check_tool(name: str, command: list[str]) -> dict:
             capture_output=True,
             timeout=TOOL_TIMEOUTS.get(name, 30),
             env=tool_environment(),
-            cwd=ROOT / "tools" / "zap" / "ZAP_2.17.0" if name == "zap" else None,
+            cwd=ROOT if name == "zap" else None,
         )
         version = (proc.stdout or proc.stderr).strip().splitlines()[:3]
         return {

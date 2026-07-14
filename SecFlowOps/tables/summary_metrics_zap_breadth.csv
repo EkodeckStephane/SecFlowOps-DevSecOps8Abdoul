@@ -1,0 +1,3 @@
+configuration,n_runs,pipeline_success_rate,mean_pipeline_time_seconds,mean_scanner_time_seconds,mean_findings_initial,mean_findings_residual,mean_recall,mean_precision,mean_auto_remediation_rate,mean_mttr_seconds,mean_mttd_seconds
+C1_NonBlockingScanning,3,1.0,50.718253466688715,49.80921833329679,23.0,23.0,0.5,0.043478260869565216,0.0,0.0,50.714699
+C3_PolicyOnly,3,1.0,48.95524700001503,47.90815196667487,23.0,23.0,0.5,0.043478260869565216,0.0,0.0,48.809052

@@ -1,0 +1,18 @@
+campaign_id,repo,phase,test_mode,run_id,remediated_count,started_at,command,returncode,elapsed_seconds,stdout_tail,stderr_tail
+priority_validation_regression,external_gorilla_mux,before_remediation,native_test,,,2026-07-14T12:15:57.647790+00:00,go test ./...,0,22.95343110000249,"ok  	github.com/gorilla/mux	1.113s
+",
+priority_validation_regression,external_gorilla_mux,after_secflowops_remediation_workspace,native_test,20260714T121557647790Z_C4_AgentsOnly_external_gorilla_mux_r1,0,2026-07-14T12:16:47.164665+00:00,go test ./...,0,3.37762639997527,"ok  	github.com/gorilla/mux	1.084s
+",
+priority_validation_regression,external_gorilla_websocket,before_remediation,native_test,,,2026-07-14T12:17:01.431800+00:00,go test ./...,0,14.195402199984528,"ok  	github.com/gorilla/websocket	2.111s
+?   	github.com/gorilla/websocket/examples/autobahn	[no test files]
+?   	github.com/gorilla/websocket/examples/chat	[no test files]
+?   	github.com/gorilla/websocket/examples/command	[no test files]
+?   	github.com/gorilla/websocket/examples/filewatch	[no test files]
+","go: downloading golang.org/x/net v0.26.0
+"
+priority_validation_regression,external_gorilla_websocket,after_secflowops_remediation_workspace,native_test,20260714T121701431800Z_C4_AgentsOnly_external_gorilla_websocket_r1,0,2026-07-14T12:18:06.621722+00:00,go test ./...,0,5.064222000015434,"ok  	github.com/gorilla/websocket	1.894s
+?   	github.com/gorilla/websocket/examples/autobahn	[no test files]
+?   	github.com/gorilla/websocket/examples/chat	[no test files]
+?   	github.com/gorilla/websocket/examples/command	[no test files]
+?   	github.com/gorilla/websocket/examples/filewatch	[no test files]
+",

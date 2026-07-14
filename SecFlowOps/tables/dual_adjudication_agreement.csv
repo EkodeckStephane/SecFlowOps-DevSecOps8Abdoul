@@ -1,0 +1,2 @@
+n_common_findings,n_completed_pairs,n_unresolved_pairs,raw_agreement,cohen_kappa_true_positive,status
+94,0,94,0.0,0.0,pending_reviewer_labels

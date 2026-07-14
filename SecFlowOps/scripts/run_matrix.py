@@ -40,12 +40,16 @@ def utc_now() -> str:
 def scanner_environment() -> dict[str, str]:
     env = os.environ.copy()
     semgrep_home = ROOT / "artifact" / "semgrep_home"
+    semgrep_cache = ROOT / "artifact" / "semgrep_cache"
     trivy_cache = ROOT / "artifact" / "trivy_cache"
     semgrep_home.mkdir(parents=True, exist_ok=True)
+    semgrep_cache.mkdir(parents=True, exist_ok=True)
     trivy_cache.mkdir(parents=True, exist_ok=True)
     env.setdefault("XDG_CONFIG_HOME", str(semgrep_home))
+    env.setdefault("XDG_CACHE_HOME", str(semgrep_cache))
     env.setdefault("SEMGREP_LOG_FILE", str(semgrep_home / "semgrep.log"))
     env.setdefault("SEMGREP_SETTINGS_FILE", str(semgrep_home / "settings.yml"))
+    env.setdefault("SEMGREP_VERSION_CACHE_PATH", str(semgrep_cache / "semgrep_version"))
     env.setdefault("TRIVY_CACHE_DIR", str(trivy_cache))
     return env
 
@@ -245,7 +249,7 @@ def run_zap_scan(workspace: Path, raw_dir: Path, scanner_dir: Path, log_path: Pa
         ]
         return run_command(
             cmd,
-            cwd=zap_jar.parent,
+            cwd=ROOT,
             log_path=log_path,
             timeout=300,
             env=scanner_environment(),

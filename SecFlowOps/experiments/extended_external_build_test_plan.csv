@@ -1,0 +1,12 @@
+repo_id,stack,native_test_command,fallback_check_command,requires_project_dependencies,planned_use
+external_requests,python;pip,python -m pytest -q,python -m compileall src tests,true,native_before_after_when_executable;fallback_records_environment_limit
+external_flask,python;pip,python -m pytest -q,python -m compileall src tests,true,native_before_after_when_executable;fallback_records_environment_limit
+external_click,python;pip,python -m pytest -q,python -m compileall src tests,true,native_before_after_when_executable;fallback_records_environment_limit
+external_itsdangerous,python;pip,python -m pytest -q,python -m compileall src tests,true,native_before_after_when_executable;fallback_records_environment_limit
+external_express,javascript;npm,npm.cmd test,node -c index.js,true,native_before_after_when_executable;fallback_records_environment_limit
+external_body_parser,javascript;npm,npm.cmd test,node -c index.js,true,native_before_after_when_executable;fallback_records_environment_limit
+external_morgan,javascript;npm,npm.cmd test,node -c index.js,true,native_before_after_when_executable;fallback_records_environment_limit
+external_nodegoat,javascript;npm;docker,npm.cmd test,node -c server.js,true,native_before_after_when_executable;fallback_records_environment_limit
+external_dvna,javascript;npm;docker,npm.cmd test,node -c server.js,true,native_before_after_when_executable;fallback_records_environment_limit
+external_gorilla_mux,go,go test ./...,go test ./...,true,native_before_after_when_executable;fallback_records_environment_limit
+external_gorilla_websocket,go,go test ./...,go test ./...,true,native_before_after_when_executable;fallback_records_environment_limit

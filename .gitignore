@@ -23,13 +23,22 @@ npm-cache/
 *.synctex.gz
 *.toc
 
+# Manuscript sources and local article drafts are kept out of the GitHub artifact repository
+SecFlowOps/paper/
+article/
+bib_keys.txt
+bibliography.bib
+review_secflow_q1.md
+
 # SecFlowOps generated runtime outputs
 SecFlowOps/data/raw/
+SecFlowOps/data/regression_workspaces/
 SecFlowOps/data/normalized/*
 !SecFlowOps/data/normalized/
 !SecFlowOps/data/normalized/remediation_pr_probe.jsonl
 SecFlowOps/artifact/trivy_cache/
 SecFlowOps/artifact/semgrep_home/
+SecFlowOps/artifact/semgrep_cache/
 SecFlowOps/artifact/zap_home/
 SecFlowOps/tmp_nodegoat_npm_probe/
 

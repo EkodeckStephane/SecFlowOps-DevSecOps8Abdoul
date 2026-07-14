@@ -2,8 +2,8 @@
   {
     "tool": "python",
     "available": true,
-    "path": "C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python313\\python.EXE",
-    "version": "Python 3.13.5",
+    "path": "C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python311\\python.EXE",
+    "version": "Python 3.11.9",
     "error": null
   },
   {
@@ -59,7 +59,7 @@
     "tool": "zap",
     "available": true,
     "path": "C:\\Users\\User\\Downloads\\Compressed\\DevSecOps8Abdoul\\SecFlowOps\\tools\\zap\\ZAP_2.17.0\\zap-2.17.0.jar",
-    "version": "2.17.0",
+    "version": "Defaulting ZAP install dir to C:\\Users\\User\\Downloads\\Compressed\\DevSecOps8Abdoul\\SecFlowOps\\tools\\zap\\ZAP_2.17.0 | 2.17.0",
     "error": null
   }
 ]

@@ -86,6 +86,47 @@ From the repository root:
 
 The external script clones or updates five open-source repositories, runs `C1`, `C2`, `C3`, `C4`, and `C5` over each repository, computes external security, adjudication, statistical, and performance summaries, and writes a reviewed first-pass adjudication table. With three repetitions this produces 75 runs. The command uses `--build-mode skip` because project-specific dependency installation and test execution are not part of the external security-pipeline measurement.
 
+## Reproduce The Extended External Validation
+
+From the repository root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\SecFlowOps\artifact\run_extended_external_study.ps1 -Repetitions 1 -CampaignId extended_external_manual -ExternalLimit 0
+```
+
+This prepares 11 external repositories across Python, JavaScript/npm, security-benchmark, and Go ecosystems, then runs `C1`, `C4`, and `C5` with `--build-mode skip`. The run measures security-pipeline behavior separately from application-native tests. The corpus manifest and build/test plan are written to `SecFlowOps/experiments/extended_external_corpus_manifest.csv` and `SecFlowOps/experiments/extended_external_build_test_plan.csv`.
+
+## Reproduce Dual Natural Finding Adjudication Setup
+
+After an external campaign:
+
+```powershell
+python SecFlowOps\scripts\create_dual_adjudication_protocol.py
+python SecFlowOps\scripts\compute_dual_adjudication_agreement.py
+```
+
+This creates reviewer A/B files, a consensus template, a codebook, and an agreement table. The agreement table remains `pending_reviewer_labels` until two independent reviewers complete the reviewer files.
+
+## Reproduce Application Regression Checks
+
+From the repository root:
+
+```powershell
+python SecFlowOps\scripts\run_application_regression_checks.py --campaign-id regression_manual --repos external_gorilla_mux external_gorilla_websocket --post-remediation --timeout 900 --output-label priority_validation
+```
+
+This executes native `go test ./...` checks before and after SecFlowOps remediation workspaces for repositories whose test environments are practical in the local setup.
+
+## Reproduce The ZAP Breadth Study
+
+From the repository root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\SecFlowOps\artifact\run_zap_breadth_study.ps1 -Repetitions 1 -CampaignId zap_breadth_manual
+```
+
+This runs OWASP ZAP quick scans over three controlled reflected-XSS targets and computes DAST security and performance summaries.
+
 ## Reproduce The NodeGoat npm Remediation Study
 
 From the repository root:
@@ -137,6 +178,10 @@ This script copies real OSS repositories, injects controlled SecFlowOps findings
 - Injected external recall metrics: `SecFlowOps/tables/summary_metrics_injected_external.csv`, `SecFlowOps/tables/performance_by_config_injected_external.csv`, `SecFlowOps/tables/bootstrap_descriptives_injected_external.csv`
 - Full protocol metrics: `SecFlowOps/tables/summary_metrics_full_protocol.csv`, `SecFlowOps/tables/performance_by_config_full_protocol.csv`, `SecFlowOps/tables/ablation_results_full_protocol.csv`, `SecFlowOps/tables/policy_sensitivity_full_protocol.csv`
 - ZAP DAST probe metrics: `SecFlowOps/tables/summary_metrics_zap_probe_matched.csv`, `SecFlowOps/tables/performance_by_config_zap_probe_matched.csv`
+- Extended external metrics: `SecFlowOps/tables/summary_metrics_extended_external.csv`, `SecFlowOps/tables/performance_by_config_extended_external.csv`
+- ZAP breadth metrics: `SecFlowOps/tables/summary_metrics_zap_breadth.csv`, `SecFlowOps/tables/performance_by_config_zap_breadth.csv`
+- Application regression checks: `SecFlowOps/data/processed/application_regression_checks_priority_validation.csv`
+- Priority validation report: `SecFlowOps/experiments/priority_validation_execution_report.md`
 - GitHub Actions and PR evidence: `SecFlowOps/experiments/github_actions_evidence.md`
 - Figures: `SecFlowOps/figures/*.png`
 

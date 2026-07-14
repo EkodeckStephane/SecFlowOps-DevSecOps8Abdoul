@@ -48,6 +48,7 @@ def scanner_component(steps: dict[str, Any], phase: str, tool: str) -> float:
 def load_corpus() -> dict[str, dict[str, str]]:
     rows = read_csv(ROOT / "experiments" / "corpus_manifest.csv")
     rows.extend(read_csv(ROOT / "experiments" / "external_corpus_manifest.csv"))
+    rows.extend(read_csv(ROOT / "experiments" / "extended_external_corpus_manifest.csv"))
     rows.extend(read_csv(ROOT / "experiments" / "injected_external_corpus_manifest.csv"))
     rows.extend(read_csv(ROOT / "experiments" / "full_protocol_corpus_manifest.csv"))
     return {row["repo_id"]: row for row in rows}
