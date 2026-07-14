@@ -1,6 +1,6 @@
 \section{Method}
 
-Figure~\ref{fig:pipeline-architecture} summarizes the SecFlowOps architecture. The framework evaluates a copied workspace rather than editing the source repository in place. This design makes the unit of measurement a pipeline run, not a permanent project migration.
+Figure~\ref{fig:pipeline-architecture} summarizes the SecFlowOps architecture. The framework evaluates an isolated codebase copy rather than editing the original codebase in place. This design makes the unit of measurement a pipeline run, not a permanent project migration.
 
 \begin{figure*}[t]
 \centering
@@ -11,15 +11,15 @@ smallbox/.style={draw, rounded corners, align=center, minimum height=7mm, text w
 arrow/.style={-Latex, thick},
 node distance=7mm and 6mm
 ]
-\node[box] (repo) {Repository copy\\build/test mode};
-\node[box, right=of repo] (scan1) {Initial scanners\\Trivy, Semgrep,\\Gitleaks, npm, ZAP};
-\node[box, right=of scan1] (norm) {Normalizer\\JSONL findings\\fingerprints};
+\node[box] (codebase) {Codebase copy\\build/test mode};
+\node[box, right=of codebase] (scan1) {Initial scanners\\Trivy, Semgrep,\\Gitleaks, npm, ZAP};
+\node[box, right=of scan1] (norm) {Normalizer\\normalized findings\\fingerprints};
 \node[box, right=of norm] (remediate) {Bounded remediation\\deterministic\\or npm-based};
 \node[box, right=of remediate] (scan2) {Post-remediation\\rescan};
 \node[box, right=of scan2] (policy) {OPA policy gate\\allow or deny};
 \node[smallbox, below=of norm] (truth) {Optional injected\\ground truth};
 \node[smallbox, below=of remediate] (metrics) {Run metrics\\residuals\\timings};
-\draw[arrow] (repo) -- (scan1);
+\draw[arrow] (codebase) -- (scan1);
 \draw[arrow] (scan1) -- (norm);
 \draw[arrow] (norm) -- (remediate);
 \draw[arrow] (remediate) -- (scan2);
@@ -29,13 +29,13 @@ node distance=7mm and 6mm
 \draw[arrow] (scan2) |- (metrics);
 \draw[arrow] (policy) |- (metrics);
 \end{tikzpicture}
-\caption{SecFlowOps workflow and measurement architecture. Scanners produce normalized findings, bounded remediators edit only the copied workspace, a second scanner pass measures residual findings, and OPA decides whether the residual state satisfies the delivery policy.}
+\caption{SecFlowOps workflow and measurement architecture. Scanners produce normalized findings, bounded remediators edit only the isolated copy, a second scanner pass measures residual findings, and OPA decides whether the residual state satisfies the delivery policy.}
 \label{fig:pipeline-architecture}
 \end{figure*}
 
-The pipeline has five stages. First, build or test commands are executed in a copied workspace. For heterogeneous external repositories, the build step can be explicitly skipped so that missing project-specific dependencies do not confound security-pipeline measurement. Second, scanners collect SAST, SCA, secret, Docker, and Kubernetes evidence. Third, findings are normalized into JSONL records with stable fingerprints and optional ground-truth links. Fourth, remediation rules patch only the copied workspace. Fifth, a second scanner pass measures residual findings before OPA evaluates the delivery policy.
+The pipeline has five stages. First, build or test commands are executed in an isolated codebase copy. For heterogeneous external codebases, the build step can be explicitly skipped so that missing project-specific dependencies do not confound security-pipeline measurement. Second, scanners collect SAST, SCA, secret, Docker, and Kubernetes evidence. Third, findings are normalized into records with stable fingerprints and optional ground-truth links. Fourth, remediation rules patch only the isolated copy. Fifth, a second scanner pass measures residual findings before OPA evaluates the delivery policy.
 
-For each run $r$, SecFlowOps records an initial finding multiset $F_0(r)$ and a residual finding multiset $F_1(r)$ after remediation. Where non-empty complete injected ground truth $G(r)$ is available, recall is computed as $|\mathrm{match}(F_0(r),G(r))|/|G(r)|$, and residual ground-truth findings are computed as $|\mathrm{match}(F_1(r),G(r))|$. These quantities are not reported as natural-vulnerability recall for open-source repositories because no complete independent ground truth exists for those repositories. The policy decision is computed only from $F_1(r)$ and the configured thresholds, so a run may be successful as an experiment while correctly denying delivery.
+For each run $r$, SecFlowOps records an initial finding multiset $F_0(r)$ and a residual finding multiset $F_1(r)$ after remediation. Where non-empty complete injected ground truth $G(r)$ is available, recall is computed as $|\mathrm{match}(F_0(r),G(r))|/|G(r)|$, and residual ground-truth findings are computed as $|\mathrm{match}(F_1(r),G(r))|$. These quantities are not reported as natural-vulnerability recall for open-source codebases because no complete independent ground truth exists for those codebases. The policy decision is computed only from $F_1(r)$ and the configured thresholds, so a run may be successful as an experiment while correctly denying delivery.
 
 \begin{figure}[t]
 \centering
@@ -60,6 +60,6 @@ node distance=6mm
 \label{fig:finding-trajectory}
 \end{figure}
 
-Remediation is deliberately bounded. Deterministic rules update known vulnerable Python pins, remove documented fake secrets, escape reflected HTML output, parameterize a SQL query, and harden Docker or Kubernetes settings. For NodeGoat, the npm remediator runs \texttt{npm audit fix --package-lock-only --omit=dev} and records the npm return code and lockfile change. A non-zero npm return code is retained as evidence of residual advisories, not hidden as a tool failure.
+Remediation is deliberately bounded. Deterministic rules update known vulnerable Python pins, remove documented fake secrets, escape reflected HTML output, parameterize a SQL query, and harden Docker or Kubernetes settings. For NodeGoat, the npm remediator runs \texttt{npm audit fix --package-lock-only --omit=dev} and records the npm return code and dependency-manifest change. A non-zero npm return code is retained as evidence of residual advisories, not hidden as a tool failure.
 
 OPA evaluates residual findings using a policy with zero tolerance for critical findings, a high-severity threshold of three, a CVSS ceiling of 9.0, and blocking on residual secrets. The policy counts residual findings as a list rather than a set so duplicate scanner findings are not silently deduplicated.

@@ -1,5 +1,7 @@
 \section{Reproducibility and Artifact Scope}
 
+The review repository is available at \url{https://github.com/EkodeckStephane/SecFlowOps-DevSecOps8Abdoul}. The artifact is organized to expose the procedures, code, data, and metric-generation evidence needed to recreate the manuscript's tables and figures.
+
 The artifact includes executable scripts for the reported studies: \texttt{run\_expanded\_study.ps1}, \texttt{run\_full\_protocol\_study.ps1}, \texttt{run\_external\_study.ps1}, \texttt{run\_nodegoat\_npm\_study.ps1}, and \texttt{run\_injected\_external\_study.ps1}. It also includes a separate npm-only baseline script, \texttt{run\_npm\_audit\_only\_baseline.ps1}. The scripts generate raw logs, normalized findings, processed run metrics, summary tables, and performance tables under \texttt{SecFlowOps/data}, \texttt{SecFlowOps/tables}, and \texttt{SecFlowOps/figures}.
 
 The checked local toolchain uses Python 3.13, Docker, Java 24.0.1, Trivy 0.71.2, Semgrep 1.169.0, OPA 1.18.2, Gitleaks 8.30.1, and OWASP ZAP 2.17.0. OPA, Gitleaks, and ZAP are bundled in the artifact, while Trivy, Semgrep, Docker, npm, and Java are expected from the host environment. Tool status is recorded in \texttt{SecFlowOps/artifact/tool\_status.json}; file checksums are recorded in \texttt{SecFlowOps/artifact/checksums.sha256}.
