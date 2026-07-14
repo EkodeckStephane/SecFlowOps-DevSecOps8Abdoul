@@ -8,11 +8,12 @@ findings. It must not be exposed to the public internet.
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 import sqlite3
+import html
 
 
 def render_search_response(query: str) -> str:
     # Intentional SAST finding: reflected unescaped user input for scanner tests.
-    body = f"<html><body>Search: {query}</body></html>"
+    body = f"<html><body>Search: {html.escape(query)}</body></html>"
     return body
 
 
@@ -21,8 +22,8 @@ def unsafe_user_lookup(username: str) -> list[tuple]:
     conn = sqlite3.connect(":memory:")
     conn.execute("CREATE TABLE users (name TEXT)")
     conn.execute("INSERT INTO users VALUES ('alice')")
-    query = f"SELECT name FROM users WHERE name = '{username}'"
-    return list(conn.execute(query))
+    query = "SELECT name FROM users WHERE name = ?"
+    return list(conn.execute(query, (username,)))
 
 
 class Handler(BaseHTTPRequestHandler):
