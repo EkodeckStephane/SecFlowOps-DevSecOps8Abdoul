@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
   pull-requests: write
 
 jobs:
@@ -32,6 +33,13 @@ jobs:
             --findings SecFlowOps/data/normalized/remediation_pr_probe.jsonl \
             --output secflowops-remediation-log.json
 
+      - name: Upload remediation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: secflowops-remediation-pr-evidence
+          path: secflowops-remediation-log.json
+          if-no-files-found: error
+
       - name: Create pull request
         uses: peter-evans/create-pull-request@v6
         with:
@@ -49,11 +57,3 @@ jobs:
             Human review is required before merge.
           labels: security,needs-review
           delete-branch: true
-
-      - name: Upload remediation evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: secflowops-remediation-pr-evidence
-          path: secflowops-remediation-log.json
-          if-no-files-found: error
