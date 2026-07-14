@@ -7,3 +7,23 @@ The checked local toolchain uses Python 3.13, Docker, Java 24.0.1, Trivy 0.71.2,
 Remote workflow evidence is recorded in \texttt{github\_actions\_evidence.md}. The GitHub validation used a private repository, executed the remote CI workflow on \texttt{main}, created a real remediation pull request from a user-pushed branch, observed passing \texttt{pull\_request} CI, merged the PR, measured a 25 min 35 s creation-to-merge latency, and observed passing post-merge CI on \texttt{main}.
 
 Reproducibility is claimed at the artifact-workflow level: a reviewer can rerun the scripts to regenerate metrics using the same source state and installed tools. We do not claim bit-identical future vulnerability counts because Trivy, npm, and advisory databases are time-sensitive. We also do not claim independent replication: no third-party rerun has been performed as part of this manuscript.
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\caption{Artifact components, utility, and execution requirements.}
+\label{tab:artifact-scope}
+\begin{tabular}{@{}p{0.23\linewidth}p{0.38\linewidth}p{0.31\linewidth}@{}}
+\toprule
+Artifact component & Utility for reviewers & Main requirements \\
+\midrule
+Study scripts under \texttt{SecFlowOps/artifact} & Regenerate controlled, full-protocol, external, NodeGoat, injected-external, ZAP, and npm-baseline campaigns. & Windows PowerShell, Python 3.13, host tools declared in \texttt{tool\_status.json}. \\
+Raw and processed data under \texttt{SecFlowOps/data} & Inspect scanner outputs, normalized findings, run metrics, remediation metrics, and timing records. & No execution required for inspection; reruns require scanner availability and current advisory databases. \\
+Tables and figures under \texttt{SecFlowOps/tables} and \texttt{SecFlowOps/figures} & Audit the manuscript tables and result figures from processed metrics. & Python analysis scripts and plotting dependencies from artifact requirements. \\
+Policies under \texttt{SecFlowOps/policies} & Verify the OPA gate used for C3 and C5 decisions. & OPA 1.18.2 or compatible Rego runtime. \\
+Bundled tools under \texttt{SecFlowOps/tools} & Provide local OPA, Gitleaks, and ZAP binaries used in the reported environment. & Java 24 for ZAP; Windows-compatible execution for bundled binaries. \\
+GitHub Actions evidence & Check remote CI, pull-request creation, owner merge acceptance, merge latency, and post-merge CI. & GitHub access to the repository evidence; no local rerun required. \\
+Checksums and tool status & Verify artifact integrity and tool versions used for the reported run. & SHA-256 verification utility; awareness that scanner advisory databases evolve. \\
+\bottomrule
+\end{tabular}
+\end{table*}

@@ -44,3 +44,10 @@ C5 SecFlowOps & 96.302 s & 44.778 s \\
 In the injected external recall study, mean pipeline time was 18.155 seconds for non-blocking scanning and 35.519 seconds for SecFlowOps. These results show that npm remediation is substantially more expensive than deterministic text patches, and that scanner re-execution remains the dominant overhead across all studies.
 
 In the 432-run full protocol campaign, mean pipeline time was 22.061 seconds for C1 and 43.749 seconds for C5; medians were 20.691 seconds and 41.409 seconds, respectively. One C2 Semgrep run lasted 3944.596 seconds and is retained in the raw data; this outlier explains why C2 mean runtime is much larger than its median. In the ZAP probe, the ZAP-enabled scanner pass took 25.845 seconds for C1 and 20.116 seconds for C3, including ZAP quick scan execution against a local dynamic-port target.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{../figures/performance_overheads_full_protocol.png}
+\caption{Full-protocol performance overheads generated from the processed timing metrics.}
+\label{fig:performance-overheads}
+\end{figure}

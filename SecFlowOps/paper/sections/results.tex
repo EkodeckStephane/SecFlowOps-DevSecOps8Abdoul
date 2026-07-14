@@ -20,6 +20,21 @@ Injected external C5 & 9 & 9 & 68.3 & 16.0 & Injected-ground-truth recall was 1.
 \end{tabular}
 \end{table*}
 
+\begin{figure*}[t]
+\centering
+\begin{minipage}{0.48\linewidth}
+\centering
+\includegraphics[width=\linewidth]{../figures/pipeline_success_by_config_full_protocol.png}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\linewidth}
+\centering
+\includegraphics[width=\linewidth]{../figures/coverage_precision_recall_full_protocol.png}
+\end{minipage}
+\caption{Full-protocol result figures generated from the processed metrics: pipeline success by configuration and coverage/precision/recall summaries.}
+\label{fig:full-protocol-security}
+\end{figure*}
+
 In the controlled campaign, five generated repositories were evaluated across six configurations and three repetitions, for 90 runs. The policy-only configuration was blocked in all 15 runs, while the combined SecFlowOps configuration passed in all 15 runs after local remediation and OPA evaluation. For SecFlowOps runs, residual critical findings and residual secrets were reduced to zero. Two high-severity Kubernetes hardening findings remained in each run and were permitted by the configured policy threshold.
 
 The full protocol campaign executed 432/432 planned local runs. Each configuration has 72 runs. Pipeline success was 72/72 for C0, C1, C2, C4, and C5, and 45/72 for C3 because policy-only correctly denied vulnerable raw findings. Mean residual findings decreased from 28.0 in scan-only configurations to 16.0 in C4 and C5. Mean recall was 0.795 in the 432-run campaign because DAST ground-truth rows are part of the scenario design but executable ZAP scanning is evaluated separately. The targeted ZAP probe produced real ZAP JSON output and matched the reflected-XSS DAST ground truth with severity high.
@@ -65,3 +80,23 @@ C5 SecFlowOps & 9 & 1.0 & 0 & Remediated and policy-passed \\
 \subsection{Precision Interpretation}
 
 We report three distinct notions that should not be merged. First, controlled and injected-external recall are measured against known injected ground truth. Second, the conservative precision field in the generated summary tables treats all non-ground-truth scanner findings as unknown or false-positive candidates; for the injected external study this yields a mean precision of 0.088 because real repository hardening and dependency findings coexist with the injected findings. This number is therefore a lower-bound bookkeeping measure, not a claim that contemporary scanners are mostly wrong. Third, the external adjudication table reviewed 82 unique naturally occurring findings by static repository evidence; within that reviewed subset, adjudicated precision was 1.0 for runs with adjudicated findings. This is not an independent exploitability audit and is not used to claim complete recall over naturally occurring external vulnerabilities.
+
+\subsection{Answers to the Research Questions}
+
+Table~\ref{tab:rq-answers} links the reported evidence back to the research questions in Table~\ref{tab:rq}. The answers are intentionally bounded to the campaigns that were executed.
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\caption{Evidence-based answers to the research questions.}
+\label{tab:rq-answers}
+\begin{tabular}{@{}p{0.08\linewidth}p{0.47\linewidth}p{0.37\linewidth}@{}}
+\toprule
+RQ & Evidence & Answer \\
+\midrule
+RQ1 & Injected-external runs reached recall 1.0 and C5 ended with zero residual injected findings; the targeted ZAP probe produced ZAP JSON output and matched reflected-XSS ground truth. & Supported for injected findings and the ZAP probe. Not claimed for complete natural-vulnerability recall on external repositories. \\
+RQ2 & In the 432-run protocol, mean residual findings decreased from 28.0 in scan-only configurations to 16.0 in C4/C5. NodeGoat remained denied because residual critical and high findings survived npm remediation. & Combined scan-remediate-rescan-policy evaluation distinguishes reduction from acceptable delivery; policy denial is a measured outcome, not a tool failure. \\
+RQ3 & Full-protocol C5 mean runtime was 43.749 s versus 22.061 s for C1; NodeGoat C5 mean runtime was 96.302 s versus 19.620 s for C1. OPA evaluation was below scanner and remediation costs in the controlled and external campaigns. & The dominant costs are rescanning and npm remediation, not policy evaluation, in the reported environment. \\
+\bottomrule
+\end{tabular}
+\end{table*}

@@ -1,5 +1,27 @@
 \section{Experimental Design}
 
+Table~\ref{tab:configs} defines the configurations used in the experiments. The notation is used consistently in the results tables and figures.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Pipeline configurations.}
+\label{tab:configs}
+\begin{tabular}{@{}lp{0.70\linewidth}@{}}
+\toprule
+ID & Definition \\
+\midrule
+C0 & Build or test only; no security scanner, remediator, rescan, or policy gate. \\
+C1 & Non-blocking scanner execution; findings are measured but delivery is not blocked. \\
+C2 & Scanner execution in automatic mode without remediation or policy decision. \\
+C3 & Policy-only gate over raw findings; no remediation before the decision. \\
+C4 & Remediation agents and post-remediation rescan; no OPA gate. \\
+C5 & Combined SecFlowOps: scan, remediate, rescan, and OPA policy gate. \\
+B1 & npm-audit-only NodeGoat baseline without SecFlowOps secret remediation or OPA gate. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 Table~\ref{tab:campaigns} summarizes the campaigns. The controlled campaign evaluates six configurations: build only, non-blocking scanning, automatic scanning, policy only, agents only, and the combined SecFlowOps configuration. Five generated repositories inject SAST, SCA, secret, Docker, and Kubernetes findings with explicit ground-truth files. Each controlled repository is evaluated three times, yielding 90 runs.
 
 The full protocol campaign executes the complete local design: three repository families, eight scenarios, six configurations, and three repetitions, yielding 432 runs. The eight scenarios are clean, vulnerable dependency, fake secret, reflected XSS, SQL injection, Docker misconfiguration, Kubernetes misconfiguration, and multi-layer. The 432-run protocol records the DAST scenario as ground truth, while executable ZAP coverage is measured in a separate targeted DAST probe to avoid merging a focused runtime validation with the full local protocol.

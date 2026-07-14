@@ -4,7 +4,23 @@ DevSecOps pipelines often combine scanners, dependency updates, local patches, a
 
 SecFlowOps is designed around this missing unit of analysis: the trajectory of a security finding from initial detection, through remediation and rescan, to a policy decision over the residual state. The contribution is not a new vulnerability scanner and not an autonomous repair system. It is a reproducible framework for evaluating DevSecOps pipeline configurations under common scanner, remediation, and gate workloads, including cases where the appropriate outcome is policy denial rather than delivery.
 
-The paper asks three research questions. RQ1 asks whether SecFlowOps detects and removes injected ground-truth findings under controlled and real-repository contexts. RQ2 asks how scanner-only, remediation-only, policy-only, and combined configurations differ in residual findings and policy outcomes on generated and open-source repositories. RQ3 asks what runtime overhead is introduced by remediation, rescanning, npm-based dependency updates, DAST execution, and OPA policy evaluation.
+Table~\ref{tab:rq} gives the research questions, their literature motivation, and the evidence used to answer them. The questions follow from prior work showing that static-analysis warnings require workflow integration \cite{johnsonStaticAnalysis2013,bellerStaticAnalysis2016}, security-tool benchmarks need explicit measurement criteria \cite{pariziBenchmark2018}, and dependency remediation must be evaluated beyond the existence of automated update mechanisms \cite{decanNpm2018,mirhosseiniPullRequests2017}.
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\caption{Research questions, motivation, and answer path.}
+\label{tab:rq}
+\begin{tabular}{@{}p{0.08\linewidth}p{0.32\linewidth}p{0.31\linewidth}p{0.21\linewidth}@{}}
+\toprule
+RQ & Question & Motivation & Evidence used to answer \\
+\midrule
+RQ1 & Does SecFlowOps detect and remove injected ground-truth findings in controlled and real-repository contexts? & Scanner outputs alone do not establish whether known target findings are detected and removed \cite{johnsonStaticAnalysis2013,bellerStaticAnalysis2016}. & Controlled and injected-external recall, residual ground-truth counts, ZAP probe. \\
+RQ2 & How do scanner-only, remediation-only, policy-only, and combined configurations differ in residual findings and policy outcomes? & Benchmark comparisons require fixed targets, comparable configurations, and explicit outcome criteria \cite{pariziBenchmark2018}. & Configuration table, 432-run protocol, external OSS campaign, NodeGoat baseline. \\
+RQ3 & What runtime cost is introduced by remediation, rescanning, npm updates, DAST, and OPA policy evaluation? & Automated dependency updates and pipeline gates are useful only if operational cost is measured with the security outcome \cite{decanNpm2018,mirhosseiniPullRequests2017}. & Component timings, paired overheads, full-protocol and NodeGoat performance tables. \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 The main contributions are as follows:
 \begin{enumerate}
