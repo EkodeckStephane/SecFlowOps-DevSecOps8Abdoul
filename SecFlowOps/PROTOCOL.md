@@ -1,124 +1,71 @@
-# SecFlowOps Experimental Protocol
+# SecFlowOps experimental protocol
 
-## Objective
+## Scientific object
 
-Evaluate whether an integrated DevSecOps pipeline combining real multi-layer
-scanning, Policy-as-Code, and semi-autonomous remediation changes detection,
-remediation, and deployment-gate outcomes compared with ablated configurations.
+The protocol measures the transition from initial security evidence to residual security evidence and an explicit Policy-as-Code release decision. It separates the effect of remediation/rescanning from the effect of policy gating under matched workloads.
 
-## Scope
+## Experimental configurations
 
-This artifact starts with a controlled local study. It does not claim production
-readiness, industrial validation, or direct cognitive-load reduction.
+| ID | Configuration | Build/Test | Scan | Remediation | Rescan | OPA |
+|---|---|---:|---:|---:|---:|---:|
+| C0 | BuildOnly | yes | no | no | no | no |
+| C1 | ScanOnly | yes | yes | no | no | no |
+| C2 | PolicyOnly | yes | yes | no | no | yes |
+| C3 | RemediationOnly | yes | yes | yes | yes | no |
+| C4 | SecFlowOps | yes | yes | yes | yes | yes |
 
-## Hypotheses
+## Controlled design
 
-- H1: configurations with remediation automation reduce time-to-patch and MTTR
-  relative to scan-only configurations.
-- H2: Policy-as-Code changes deployment success and residual-risk outcomes by
-  enforcing explicit blocking rules.
-- H3: the full configuration exposes the trade-off between remediation gains and
-  policy-gate strictness more clearly than either pillar alone.
+The controlled corpus contains three codebase families and eight scenarios:
 
-## Experimental Unit
+- clean;
+- vulnerable dependency;
+- fake secret;
+- reflected XSS;
+- SQL injection;
+- Docker misconfiguration;
+- Kubernetes misconfiguration;
+- multi-layer.
 
-One run is one complete execution of one configuration on one repository
-scenario, with raw logs, scanner outputs, normalized findings, policy decision,
-and remediation log preserved under `data/raw/<run_id>/`.
-
-## Configurations
-
-| ID | Name | Build/Test | Scanners | Remediation | Policy Gate |
-|---|---|---:|---:|---:|---:|
-| C0 | BuildOnly | yes | no | no | no |
-| C1 | NonBlockingScanning | yes | yes | no | no |
-| C2 | AutoScanning | yes | yes | no | no |
-| C3 | PolicyOnly | yes | yes | no | yes, raw findings |
-| C4 | AgentsOnly | yes | yes | yes | no |
-| C5 | SecFlowOps | yes | yes | yes | yes, residual findings |
-
-`C1` is not called "ManualSecurity" because no human intervention is measured in
-the local artifact.
-
-## Repositories and Scenarios
-
-Initial controlled repository:
-
-- `repos/sample_api`: Python HTTP API with intentionally injected, defensive
-  test vulnerabilities.
-
-Initial scenarios:
-
-- vulnerable dependency in `requirements.txt`;
-- fake test secret in `.env.test`;
-- SAST-detectable reflected output pattern in `app.py`;
-- Dockerfile and Kubernetes misconfigurations;
-- clean endpoint for build/test sanity.
-
-The target full study should expand to at least:
+The resulting 24 family-scenario workloads are the independent experimental units. Each workload is executed three times per configuration as a technical repetition:
 
 ```text
-3 repositories x 8 scenarios x 6 configurations x 3 repetitions = 432 runs
+24 workloads x 5 configurations x 3 technical repetitions = 360 executions
 ```
 
-The smoke run is explicitly not sufficient for publication-level generalization.
+## Outcome model
 
-## Ground Truth
+Each execution records:
 
-Ground-truth records are stored in
-`repos/ground_truth/ground_truth_findings.csv`.
+- execution completion;
+- initial normalized findings;
+- residual normalized findings where remediation applies;
+- remediation events and validation state;
+- release decision (`ALLOW`, `DENY`, or not applicable);
+- scanner, remediation, policy, and end-to-end timing.
 
-Rows marked `expected_detection=false` or `source=uncertain` are excluded from
-strict recall and false-negative denominators.
+A policy `DENY` is a valid release outcome and is recorded independently from execution completion.
 
-## Metrics
+## Ground truth
 
-Primary metrics:
+Ground-truth records are stored in `repos/ground_truth/ground_truth_findings.csv`. Recall denominators include only target findings marked for expected detection whose specified detector is active in the corresponding study. Residual target counts are measured after the post-remediation scanner pass.
 
-- pipeline time;
-- scanner time by tool;
-- MTTD;
-- MTTR;
-- security coverage / recall;
-- precision;
-- false positive rate;
-- false negative rate;
-- auto-remediation rate;
-- patch success rate;
-- policy gate pass rate;
-- pipeline success rate;
-- human escalation rate.
+Natural external scanner findings are evaluated through the independent adjudication workflow and are kept separate from injected-ground-truth metrics.
 
-Every percentage denominator must be explicit in the metrics CSV or companion
-metadata.
+## Statistical plan
 
-## Exclusion Criteria
+Technical repetitions are aggregated within each workload-configuration cell. The final controlled analysis reports:
 
-Runs are not deleted silently. A run may be flagged as excluded from a specific
-analysis only if:
+- workload-level descriptive summaries;
+- paired mean differences;
+- workload-bootstrap 95% confidence intervals;
+- paired standardized effects where defined;
+- exact paired sign tests for continuous effects;
+- exact McNemar tests for matched release decisions;
+- Holm adjustment within reported inferential families.
 
-- the build/test stage failed before security tooling could run;
-- a required tool was unavailable and the analysis specifically requires that
-  tool;
-- raw output is corrupt or unparsable.
+Policy robustness is evaluated by replaying alternative severity thresholds over measured residual finding sets.
 
-The raw run remains in `data/raw` and is listed in `experiments/raw_logs_manifest.csv`.
+## Provenance
 
-## Failure Handling
-
-Tool failures are recorded in `metadata.json` and can trigger Rego warnings.
-They are not converted into synthetic findings.
-
-## Statistical Plan
-
-For the full study:
-
-- descriptive statistics by configuration;
-- bootstrap 95% confidence intervals;
-- non-parametric or Welch tests as secondary evidence;
-- effect sizes;
-- mixed-effects or robust regression when there are enough repositories and
-  scenarios;
-- sensitivity analysis of policy thresholds.
-
-The smoke run only validates the machinery and produces descriptive outputs.
+Tool versions, policy files, advisory snapshots, normalized evidence, processed tables, and checksums are recorded in the artifact. Advisory-sensitive comparisons use the recorded frozen advisory state, while later advisory reruns are reported as separate drift checks.
