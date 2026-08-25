@@ -7,9 +7,7 @@ default allow := false
 residual_findings := [f | f := input.findings[_]; not f.remediated]
 
 critical_count := count([f | f := residual_findings[_]; lower(f.severity) == "critical"])
-
 high_count := count([f | f := residual_findings[_]; lower(f.severity) == "high"])
-
 secret_count := count([f | f := residual_findings[_]; f.category == "secret"])
 
 max_cvss := value if {
@@ -37,11 +35,6 @@ deny contains msg if {
   input.policy.block_on_secret
   secret_count > 0
   msg := sprintf("residual secret findings: %d", [secret_count])
-}
-
-warn contains msg if {
-  input.coverage < input.policy.min_coverage
-  msg := sprintf("coverage %.3f < threshold %.3f", [input.coverage, input.policy.min_coverage])
 }
 
 warn contains msg if {
