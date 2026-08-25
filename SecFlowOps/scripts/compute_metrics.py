@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import csv
 import argparse
+import csv
 import json
 import statistics
 import sys
@@ -17,6 +17,20 @@ from secflowops.normalizer.common import load_ground_truth, read_jsonl
 from secflowops.policy_gate.evaluate_policy import fallback_decision
 
 
+CANONICAL_CONFIG = {
+    "C0_BuildOnly": "BuildOnly",
+    "C1_ScanOnly": "ScanOnly",
+    "C2_PolicyOnly": "PolicyOnly",
+    "C3_RemediationOnly": "RemediationOnly",
+    "C4_SecFlowOps": "SecFlowOps",
+    "C1_NonBlockingScanning": "ScanOnly",
+    "C3_PolicyOnly": "PolicyOnly",
+    "C4_AgentsOnly": "RemediationOnly",
+    "C5_SecFlowOps": "SecFlowOps",
+}
+EXCLUDED_CONFIGS = {"C2_AutoScanning"}
+
+
 def parse_time(value: str | None) -> datetime | None:
     if not value:
         return None
@@ -27,93 +41,169 @@ def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def safe_div(num: float, den: float) -> float:
-    return num / den if den else 0.0
+def safe_div(num: float, den: float) -> float | None:
+    return num / den if den else None
 
 
 def scanner_time(metadata: dict[str, Any]) -> float:
     total = 0.0
     for step_name, step in metadata.get("steps", {}).items():
-        if "scanners" not in step_name:
+        if "scanners" not in step_name or not isinstance(step, dict):
             continue
         for result in step.values():
-            total += float(result.get("elapsed_seconds") or 0.0)
+            if isinstance(result, dict):
+                total += float(result.get("elapsed_seconds") or 0.0)
     return total
 
 
-def ground_truth_for_repo(ground_truth: list[dict[str, str]], repo: str) -> list[dict[str, str]]:
-    return [row for row in ground_truth if not row.get("repo") or row.get("repo") == repo]
+def active_tools(metadata: dict[str, Any]) -> set[str]:
+    explicit = metadata.get("enabled_tools") or []
+    if explicit:
+        return {str(x).lower() for x in explicit}
+    tools: set[str] = set()
+    for step_name, step in metadata.get("steps", {}).items():
+        if "scanners" not in step_name or not isinstance(step, dict):
+            continue
+        tools.update(str(k).lower() for k in step.keys())
+    return tools
 
 
-def compute_run_metrics(raw_dir: Path, ground_truth: list[dict[str, str]]) -> dict[str, Any]:
+def ground_truth_for_run(
+    ground_truth: list[dict[str, str]], repo: str, tools: set[str]
+) -> list[dict[str, str]]:
+    rows = [
+        row for row in ground_truth
+        if (not row.get("repo") or row.get("repo") == repo)
+        and row.get("expected_detection", "").lower() == "true"
+    ]
+    eligible: list[dict[str, str]] = []
+    for row in rows:
+        expected = {
+            t.strip().lower()
+            for t in (row.get("tool_expected") or "").replace(",", "|").split("|")
+            if t.strip()
+        }
+        if not expected or expected.intersection(tools):
+            eligible.append(row)
+    return eligible
+
+
+def _returncode_ok(value: Any) -> bool:
+    if value is None:
+        return True
+    try:
+        return int(value) in (0, 1, 2)
+    except (TypeError, ValueError):
+        return False
+
+
+def execution_success(metadata: dict[str, Any]) -> bool:
+    if "execution_success" in metadata:
+        return bool(metadata["execution_success"])
+    build = metadata.get("steps", {}).get("build_test", {})
+    if not _returncode_ok(build.get("returncode")):
+        return False
+    if metadata.get("tool_failures"):
+        return False
+    for name, step in metadata.get("steps", {}).items():
+        if not name.startswith("scanners_") or not isinstance(step, dict):
+            continue
+        for result in step.values():
+            if isinstance(result, dict) and not _returncode_ok(result.get("returncode")):
+                return False
+    return True
+
+
+def validation_fields(remediation: dict[str, Any]) -> tuple[bool, str]:
+    validation = remediation.get("validation") or remediation.get("tests") or {}
+    if "validation_executed" in validation:
+        return bool(validation.get("validation_executed")), str(validation.get("validation_status") or "unknown")
+    mode = str(validation.get("mode") or "")
+    if mode.startswith("skipped") or validation.get("returncode") is None:
+        return False, "not_tested"
+    return True, "passed" if validation.get("returncode") == 0 else "failed"
+
+
+def compute_run_metrics(raw_dir: Path, ground_truth: list[dict[str, str]]) -> dict[str, Any] | None:
     metadata = read_json(raw_dir / "metadata.json")
+    raw_config = str(metadata.get("configuration"))
+    if raw_config in EXCLUDED_CONFIGS:
+        return None
+    config = CANONICAL_CONFIG.get(raw_config)
+    if not config:
+        return None
+
     decision = read_json(raw_dir / "policy_decision.json")
     remediation = read_json(raw_dir / "remediation_log.json")
     initial = read_jsonl(Path(metadata["normalized_findings"]))
     residual = read_jsonl(Path(metadata["residual_findings"]))
-    findings_for_quality = initial if initial else residual
-    residual_active = [f for f in residual if not f.get("remediated")]
+    tools = active_tools(metadata)
 
-    repo_ground_truth = ground_truth_for_repo(ground_truth, metadata["repo"])
-    expected_gt = [row for row in repo_ground_truth if row.get("expected_detection", "").lower() == "true"]
-    detected_gt_ids = {f.get("ground_truth_id") for f in findings_for_quality if f.get("ground_truth_id")}
-    tp = len(detected_gt_ids)
-    fp = sum(1 for f in findings_for_quality if f.get("is_false_positive") is True)
-    unknown = sum(1 for f in findings_for_quality if f.get("ground_truth_id") is None)
-    fn = max(len(expected_gt) - tp, 0)
-    precision = safe_div(tp, tp + fp + unknown)
-    recall = safe_div(tp, len(expected_gt))
+    eligible_gt = ground_truth_for_run(ground_truth, metadata["repo"], tools)
+    eligible_gt_ids = {row.get("finding_id") for row in eligible_gt if row.get("finding_id")}
+    initial_gt_ids = {
+        f.get("ground_truth_id") for f in initial
+        if f.get("ground_truth_id") and f.get("ground_truth_id") in eligible_gt_ids
+    }
+    residual_gt_ids = {
+        f.get("ground_truth_id") for f in residual
+        if f.get("ground_truth_id") and f.get("ground_truth_id") in eligible_gt_ids
+    }
+    gt_recall = safe_div(len(initial_gt_ids), len(eligible_gt_ids))
+    gt_removal_rate = safe_div(len(initial_gt_ids - residual_gt_ids), len(initial_gt_ids))
 
     remediated = [f for f in initial if f.get("remediated")]
-    mttr_values = []
+    mttr_values: list[float] = []
     for finding in remediated:
-        detected_at = parse_time(finding.get("timestamps", {}).get("detected_at"))
-        patched_at = parse_time(finding.get("timestamps", {}).get("patch_validated_at"))
+        detected_at = parse_time((finding.get("timestamps") or {}).get("detected_at"))
+        patched_at = parse_time((finding.get("timestamps") or {}).get("patch_validated_at"))
         if detected_at and patched_at:
             mttr_values.append((patched_at - detected_at).total_seconds())
 
     pipeline_started = parse_time(metadata.get("started_at"))
-    mttd_values = []
-    for finding in findings_for_quality:
-        detected_at = parse_time(finding.get("timestamps", {}).get("detected_at"))
+    mttd_values: list[float] = []
+    for finding in initial:
+        detected_at = parse_time((finding.get("timestamps") or {}).get("detected_at"))
         if pipeline_started and detected_at:
             mttd_values.append((detected_at - pipeline_started).total_seconds())
 
+    validation_executed, validation_status = validation_fields(remediation)
+    policy_applicable = config in {"PolicyOnly", "SecFlowOps"}
+    allow = decision.get("allow") if policy_applicable else None
+    release_decision = "ALLOW" if allow is True else "DENY" if allow is False else "NOT_APPLICABLE"
+
     return {
         "run_id": metadata["run_id"],
-        "configuration": metadata["configuration"],
+        "configuration": config,
+        "raw_configuration": raw_config,
         "repo": metadata["repo"],
         "scenario": metadata["scenario"],
         "repetition": metadata["repetition"],
         "campaign_id": metadata.get("campaign_id"),
-        "pipeline_success": metadata["pipeline_success"],
-        "pipeline_time_seconds": metadata["pipeline_time_seconds"],
+        "execution_success": execution_success(metadata),
+        "release_decision": release_decision,
+        "release_allowed": "" if allow is None else bool(allow),
+        "pipeline_time_seconds": float(metadata.get("pipeline_time_seconds") or 0.0),
         "scanner_time_seconds": scanner_time(metadata),
         "tool_failure_count": len(metadata.get("tool_failures", [])),
         "finding_count_initial": len(initial),
         "finding_count_residual": len(residual),
-        "residual_critical": sum(1 for f in residual_active if str(f.get("severity")).lower() == "critical"),
-        "residual_high": sum(1 for f in residual_active if str(f.get("severity")).lower() == "high"),
-        "residual_secret": sum(1 for f in residual_active if f.get("category") == "secret"),
+        "finding_reduction_fraction": safe_div(max(len(initial) - len(residual), 0), len(initial)),
+        "residual_critical": sum(1 for f in residual if str(f.get("severity")).lower() == "critical"),
+        "residual_high": sum(1 for f in residual if str(f.get("severity")).lower() == "high"),
+        "residual_secret": sum(1 for f in residual if f.get("category") == "secret"),
         "policy_engine": decision.get("engine"),
-        "policy_allow": decision.get("allow"),
         "policy_deny_count": len(decision.get("deny", [])),
-        "tp_ground_truth": tp,
-        "fp_unknown_or_false": fp + unknown,
-        "fn_ground_truth": fn,
-        "precision": precision,
-        "recall": recall,
-        "false_positive_rate": safe_div(fp + unknown, tp + fp + unknown),
-        "false_negative_rate": safe_div(fn, fn + tp),
-        "coverage": recall,
-        "auto_remediation_rate": safe_div(remediation.get("remediated_count", 0), max(len(initial), 1)),
-        "patch_success_rate": 1.0 if remediation.get("tests", {}).get("returncode") == 0 and remediation.get("remediated_count", 0) else 0.0,
-        "human_escalation_rate": safe_div(
-            sum(1 for e in remediation.get("events", []) if e.get("human_review_required")),
-            max(len(remediation.get("events", [])), 1),
-        ),
-        "mttd_seconds": statistics.mean(mttd_values) if mttd_values else 0.0,
-        "mttr_seconds": statistics.mean(mttr_values) if mttr_values else 0.0,
+        "ground_truth_scope_size": len(eligible_gt_ids),
+        "ground_truth_detected": len(initial_gt_ids),
+        "ground_truth_recall": "" if gt_recall is None else gt_recall,
+        "residual_ground_truth_count": "" if not eligible_gt_ids else len(residual_gt_ids),
+        "ground_truth_removal_rate": "" if gt_removal_rate is None else gt_removal_rate,
+        "remediated_count": int(remediation.get("remediated_count") or 0),
+        "validation_executed": validation_executed,
+        "validation_status": validation_status,
+        "mttd_seconds": statistics.mean(mttd_values) if mttd_values else "",
+        "validated_mttr_seconds": statistics.mean(mttr_values) if mttr_values else "",
     }
 
 
@@ -128,142 +218,26 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
-def compute_finding_metrics(raw_dirs: list[Path]) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    for raw_dir in raw_dirs:
-        metadata_path = raw_dir / "metadata.json"
-        if not metadata_path.exists():
-            continue
-        metadata = read_json(metadata_path)
-        stages = [
-            ("initial", Path(metadata.get("normalized_findings", ""))),
-            ("residual", Path(metadata.get("residual_findings", ""))),
-        ]
-        for stage, path in stages:
-            for finding in read_jsonl(path):
-                rows.append({
-                    "run_id": metadata["run_id"],
-                    "campaign_id": metadata.get("campaign_id"),
-                    "configuration": metadata["configuration"],
-                    "repo": metadata["repo"],
-                    "scenario": metadata["scenario"],
-                    "repetition": metadata["repetition"],
-                    "stage": stage,
-                    "finding_id": finding.get("finding_id"),
-                    "fingerprint": finding.get("fingerprint"),
-                    "tool": finding.get("tool"),
-                    "category": finding.get("category"),
-                    "severity": finding.get("severity"),
-                    "cvss": finding.get("cvss"),
-                    "file": finding.get("file"),
-                    "cwe": finding.get("cwe"),
-                    "cve": finding.get("cve"),
-                    "ground_truth_id": finding.get("ground_truth_id"),
-                    "is_ground_truth": finding.get("is_ground_truth"),
-                    "is_false_positive": finding.get("is_false_positive"),
-                    "remediated": finding.get("remediated"),
-                    "remediation_method": finding.get("remediation_method"),
-                })
-    return rows
-
-
-def compute_remediation_metrics(raw_dirs: list[Path]) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    for raw_dir in raw_dirs:
-        metadata_path = raw_dir / "metadata.json"
-        remediation_path = raw_dir / "remediation_log.json"
-        if not metadata_path.exists() or not remediation_path.exists():
-            continue
-        metadata = read_json(metadata_path)
-        remediation = read_json(remediation_path)
-        events = remediation.get("events") or []
-        if not events:
-            rows.append({
-                "run_id": metadata["run_id"],
-                "campaign_id": metadata.get("campaign_id"),
-                "configuration": metadata["configuration"],
-                "repo": metadata["repo"],
-                "scenario": metadata["scenario"],
-                "repetition": metadata["repetition"],
-                "finding_id": "",
-                "ground_truth_id": "",
-                "method": remediation.get("mode"),
-                "branch_created": remediation.get("branch_created"),
-                "pr_created": remediation.get("pr_created"),
-                "tests_returncode": (remediation.get("tests") or {}).get("returncode"),
-                "human_review_required": "",
-                "status": "no_remediation_event",
-                "time_to_patch_pr_seconds": 0.0,
-                "time_to_green_patch_seconds": 0.0,
-            })
-            continue
-        for event in events:
-            rows.append({
-                "run_id": metadata["run_id"],
-                "campaign_id": metadata.get("campaign_id"),
-                "configuration": metadata["configuration"],
-                "repo": metadata["repo"],
-                "scenario": metadata["scenario"],
-                "repetition": metadata["repetition"],
-                "finding_id": event.get("finding_id"),
-                "ground_truth_id": event.get("ground_truth_id"),
-                "method": event.get("method"),
-                "branch_created": remediation.get("branch_created"),
-                "pr_created": remediation.get("pr_created"),
-                "tests_returncode": (remediation.get("tests") or {}).get("returncode"),
-                "human_review_required": event.get("human_review_required"),
-                "status": event.get("status"),
-                "time_to_patch_pr_seconds": 0.0 if not remediation.get("pr_created") else "",
-                "time_to_green_patch_seconds": 0.0 if (remediation.get("tests") or {}).get("returncode") == 0 else "",
-            })
-    return rows
-
-
-def ablation_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    by_key = {(row["repo"], row["scenario"], row["repetition"], row["configuration"]): row for row in rows}
-    comparisons = [
-        ("C2_vs_C1_normalization", "C2_AutoScanning", "C1_NonBlockingScanning"),
-        ("C3_vs_C2_policy_only", "C3_PolicyOnly", "C2_AutoScanning"),
-        ("C4_vs_C2_agents_only", "C4_AgentsOnly", "C2_AutoScanning"),
-        ("C5_vs_C4_policy_after_agents", "C5_SecFlowOps", "C4_AgentsOnly"),
-        ("C5_vs_C3_agents_before_policy", "C5_SecFlowOps", "C3_PolicyOnly"),
-        ("C5_vs_C0_full_over_build", "C5_SecFlowOps", "C0_BuildOnly"),
-    ]
-    out = []
-    for name, lhs, rhs in comparisons:
-        paired = []
-        for repo, scenario, repetition, config in list(by_key):
-            if config != lhs:
-                continue
-            left = by_key.get((repo, scenario, repetition, lhs))
-            right = by_key.get((repo, scenario, repetition, rhs))
-            if left and right:
-                paired.append((left, right))
-        for metric in [
-            "pipeline_time_seconds",
-            "finding_count_residual",
-            "recall",
-            "precision",
-            "auto_remediation_rate",
-            "pipeline_success",
-        ]:
-            deltas = []
-            for left, right in paired:
-                lval = float(left[metric]) if metric != "pipeline_success" else float(bool(left[metric]))
-                rval = float(right[metric]) if metric != "pipeline_success" else float(bool(right[metric]))
-                deltas.append(lval - rval)
-            out.append({
-                "comparison": name,
-                "lhs": lhs,
-                "rhs": rhs,
-                "metric": metric,
-                "n_pairs": len(deltas),
-                "mean_delta": statistics.mean(deltas) if deltas else 0.0,
-                "median_delta": statistics.median(deltas) if deltas else 0.0,
-                "min_delta": min(deltas) if deltas else 0.0,
-                "max_delta": max(deltas) if deltas else 0.0,
-            })
-    return out
+def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    by_config: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        by_config.setdefault(row["configuration"], []).append(row)
+    summary: list[dict[str, Any]] = []
+    for config, values in sorted(by_config.items()):
+        release_rows = [v for v in values if v["release_decision"] != "NOT_APPLICABLE"]
+        recall_values = [float(v["ground_truth_recall"]) for v in values if v["ground_truth_recall"] != ""]
+        summary.append({
+            "configuration": config,
+            "n_executions": len(values),
+            "execution_completion_rate": sum(bool(v["execution_success"]) for v in values) / len(values),
+            "release_allow_rate": "" if not release_rows else sum(v["release_decision"] == "ALLOW" for v in release_rows) / len(release_rows),
+            "mean_pipeline_time_seconds": statistics.mean(float(v["pipeline_time_seconds"]) for v in values),
+            "median_pipeline_time_seconds": statistics.median(float(v["pipeline_time_seconds"]) for v in values),
+            "mean_findings_initial": statistics.mean(float(v["finding_count_initial"]) for v in values),
+            "mean_findings_residual": statistics.mean(float(v["finding_count_residual"]) for v in values),
+            "mean_ground_truth_recall": "" if not recall_values else statistics.mean(recall_values),
+        })
+    return summary
 
 
 def policy_sensitivity_rows(raw_dirs: list[Path]) -> list[dict[str, Any]]:
@@ -276,98 +250,71 @@ def policy_sensitivity_rows(raw_dirs: list[Path]) -> list[dict[str, Any]]:
                     "high_threshold": high_threshold,
                     "cvss_ceiling": cvss_ceiling,
                     "block_on_secret": block_on_secret,
-                    "min_coverage": 0.80,
                 })
-    out = []
+
+    out: list[dict[str, Any]] = []
     for policy in grid:
-        decisions = []
-        residual_counts = []
+        decisions: list[bool] = []
+        residual_counts: list[int] = []
         for raw_dir in raw_dirs:
-            metadata_path = raw_dir / "metadata.json"
-            if not metadata_path.exists():
+            metadata = read_json(raw_dir / "metadata.json")
+            raw_config = str(metadata.get("configuration"))
+            if raw_config in EXCLUDED_CONFIGS:
                 continue
-            metadata = read_json(metadata_path)
-            if metadata.get("configuration") not in {"C3_PolicyOnly", "C5_SecFlowOps"}:
+            config = CANONICAL_CONFIG.get(raw_config)
+            if config not in {"PolicyOnly", "SecFlowOps"}:
                 continue
             findings = read_jsonl(Path(metadata.get("residual_findings", "")))
             decision = fallback_decision(
                 findings,
-                coverage=1.0,
                 tool_failures=metadata.get("tool_failures", []),
                 policy=policy,
             )
             decisions.append(bool(decision.get("allow")))
-            residual_counts.append((decision.get("summary") or {}).get("residual_count", 0))
+            residual_counts.append(int((decision.get("summary") or {}).get("residual_count", 0)))
         out.append({
             **policy,
-            "n_policy_runs": len(decisions),
-            "allow_rate": safe_div(sum(1 for d in decisions if d), len(decisions)),
-            "deny_rate": safe_div(sum(1 for d in decisions if not d), len(decisions)),
-            "mean_residual_count": statistics.mean(residual_counts) if residual_counts else 0.0,
+            "n_policy_executions": len(decisions),
+            "allow_rate": "" if not decisions else sum(decisions) / len(decisions),
+            "mean_residual_count": "" if not residual_counts else statistics.mean(residual_counts),
         })
     return out
 
 
-def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    by_config: dict[str, list[dict[str, Any]]] = {}
-    for row in rows:
-        by_config.setdefault(row["configuration"], []).append(row)
-    summary = []
-    for config, values in sorted(by_config.items()):
-        summary.append({
-            "configuration": config,
-            "n_runs": len(values),
-            "pipeline_success_rate": safe_div(sum(1 for v in values if v["pipeline_success"]), len(values)),
-            "mean_pipeline_time_seconds": statistics.mean(float(v["pipeline_time_seconds"]) for v in values),
-            "mean_scanner_time_seconds": statistics.mean(float(v["scanner_time_seconds"]) for v in values),
-            "mean_findings_initial": statistics.mean(float(v["finding_count_initial"]) for v in values),
-            "mean_findings_residual": statistics.mean(float(v["finding_count_residual"]) for v in values),
-            "mean_recall": statistics.mean(float(v["recall"]) for v in values),
-            "mean_precision": statistics.mean(float(v["precision"]) for v in values),
-            "mean_auto_remediation_rate": statistics.mean(float(v["auto_remediation_rate"]) for v in values),
-            "mean_mttr_seconds": statistics.mean(float(v["mttr_seconds"]) for v in values),
-            "mean_mttd_seconds": statistics.mean(float(v["mttd_seconds"]) for v in values),
-        })
-    return summary
-
-
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--min-run-id", default=None, help="Ignore raw runs whose directory name is lexically older.")
-    parser.add_argument("--max-run-id", default=None, help="Ignore raw runs whose directory name is lexically newer.")
-    parser.add_argument("--campaign-id-filter", default=None, help="Only include runs with this exact campaign_id.")
-    parser.add_argument("--label", default="", help="Optional output label, e.g. external writes *_external.csv.")
+    parser.add_argument("--min-run-id", default=None)
+    parser.add_argument("--max-run-id", default=None)
+    parser.add_argument("--campaign-id-filter", default=None)
+    parser.add_argument("--label", default="")
     args = parser.parse_args()
 
     ground_truth = load_ground_truth(ROOT / "repos" / "ground_truth" / "ground_truth_findings.csv")
-    rows = []
-    raw_dirs = []
+    rows: list[dict[str, Any]] = []
+    raw_dirs: list[Path] = []
     for raw_dir in sorted((ROOT / "data" / "raw").glob("*")):
         if args.min_run_id and raw_dir.name < args.min_run_id:
             continue
         if args.max_run_id and raw_dir.name > args.max_run_id:
             continue
-        required = [
-            raw_dir / "metadata.json",
-            raw_dir / "policy_decision.json",
-            raw_dir / "remediation_log.json",
-        ]
-        if all(path.exists() for path in required):
-            if args.campaign_id_filter:
-                metadata = read_json(raw_dir / "metadata.json")
-                if metadata.get("campaign_id") != args.campaign_id_filter:
-                    continue
+        required = [raw_dir / "metadata.json", raw_dir / "policy_decision.json", raw_dir / "remediation_log.json"]
+        if not all(path.exists() for path in required):
+            continue
+        metadata = read_json(raw_dir / "metadata.json")
+        if args.campaign_id_filter and metadata.get("campaign_id") != args.campaign_id_filter:
+            continue
+        if str(metadata.get("configuration")) in EXCLUDED_CONFIGS:
+            continue
+        row = compute_run_metrics(raw_dir, ground_truth)
+        if row is not None:
+            rows.append(row)
             raw_dirs.append(raw_dir)
-            rows.append(compute_run_metrics(raw_dir, ground_truth))
 
     suffix = f"_{args.label}" if args.label else ""
     write_csv(ROOT / "data" / "processed" / f"run_metrics{suffix}.csv", rows)
-    write_csv(ROOT / "data" / "processed" / f"finding_metrics{suffix}.csv", compute_finding_metrics(raw_dirs))
-    write_csv(ROOT / "data" / "processed" / f"remediation_metrics{suffix}.csv", compute_remediation_metrics(raw_dirs))
     write_csv(ROOT / "tables" / f"summary_metrics{suffix}.csv", summarize(rows))
-    write_csv(ROOT / "tables" / f"ablation_results{suffix}.csv", ablation_rows(rows))
-    write_csv(ROOT / "tables" / f"policy_sensitivity{suffix}.csv", policy_sensitivity_rows(raw_dirs))
-    print(f"computed metrics for {len(rows)} runs")
+    write_csv(ROOT / "tables" / f"policy_threshold_robustness{suffix}.csv", policy_sensitivity_rows(raw_dirs))
+    print(f"processed {len(rows)} final-protocol executions")
 
 
 if __name__ == "__main__":
