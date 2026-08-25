@@ -22,10 +22,10 @@ The controlled analysis contains 24 independent family-scenario workloads. Each 
 
 - Controlled matched workloads with workload-level paired effects and release-decision analysis.
 - Open-source validation across Python, JavaScript/npm, security-benchmark, and Go repositories.
-- Dual adjudication of 94 natural scanner findings.
+- An independent adjudication protocol for natural scanner findings; article-level external results use observed initial/residual evidence and release outcomes.
 - Injected-external ground truth on real repository bases.
 - NodeGoat dependency remediation and validated dependency migration.
-- Systematic OWASP ZAP dynamic testing over controlled public and authenticated targets.
+- OWASP ZAP dynamic testing with a matched reflected-XSS ground-truth probe and a three-family breadth rerun.
 - Frozen advisory snapshots and drift checks for advisory-sensitive measurements.
 - GitHub Actions and protected-branch governance evidence.
 
