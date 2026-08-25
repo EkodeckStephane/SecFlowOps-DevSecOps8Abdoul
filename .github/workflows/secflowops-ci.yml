@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
   push:
-    branches: [ main ]
+    branches: [ main, ist-q1-revision ]
 
 permissions:
   contents: read
@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.11"
 
       - name: Install Python requirements
         run: python -m pip install -r SecFlowOps/artifact/requirements.txt
@@ -49,19 +49,26 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import yaml
-
           files = list(Path(".github/workflows").glob("*.yml"))
           for path in files:
               yaml.safe_load(path.read_text(encoding="utf-8"))
           print(f"validated {len(files)} workflow files")
           PY
 
-      - name: Upload CI evidence
+      - name: Reanalyze final IST protocol
+        run: python SecFlowOps/scripts/reanalyze_ist_protocol.py
+
+      - name: Upload CI and IST reanalysis evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: secflowops-remote-ci-evidence
+          name: secflowops-ist-q1-evidence
           path: |
+            SecFlowOps/tables/ist_retained_execution_manifest.csv
+            SecFlowOps/tables/ist_workload_level_metrics.csv
+            SecFlowOps/tables/ist_descriptive_summary.csv
+            SecFlowOps/tables/ist_paired_effects.csv
+            SecFlowOps/tables/ist_paired_release_decisions.csv
             SecFlowOps/tables/summary_metrics_full_protocol.csv
             SecFlowOps/tables/performance_by_config_full_protocol.csv
             SecFlowOps/experiments/full_protocol_study_report.md
