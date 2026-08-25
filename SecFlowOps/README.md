@@ -33,4 +33,6 @@ powershell -ExecutionPolicy Bypass -File .\SecFlowOps\artifact\run_full_protocol
 
 Each run records execution completion separately from release outcome. Gated configurations produce `ALLOW` or `DENY`; ungated configurations record the release decision as not applicable. Remediation validation is likewise explicit: `passed`, `failed`, or `not_tested` according to the executed validation command.
 
-Ground-truth recall is calculated only for target findings whose expected detector is active in the corresponding study. Natural external findings are handled through the separate adjudication workflow.
+Ground-truth recall is calculated only for target findings whose expected detector is active in the corresponding study. Natural external repositories are reported in the article through observed initial/residual findings and release outcomes; repository-wide recall is reserved for settings with an enumerated target population. The artifact retains a separate adjudication workflow for natural scanner records.
+
+OWASP ZAP evidence used in the article consists of a matched reflected-XSS ground-truth probe plus a three-family breadth rerun. Dynamic results remain separate from the static controlled recall denominator.
