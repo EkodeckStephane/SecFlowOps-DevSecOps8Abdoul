@@ -20,23 +20,23 @@ $repos = Get-Content SecFlowOps\experiments\full_protocol_corpus_manifest.csv |
   Select-Object -Skip 1 |
   ForEach-Object { ($_ -split ',')[0] }
 
+$configs = @("C0_BuildOnly", "C1_ScanOnly", "C2_PolicyOnly", "C3_RemediationOnly", "C4_SecFlowOps")
+
 python SecFlowOps\scripts\run_matrix.py `
   --campaign-id $CampaignId `
   --scenario auto `
   --build-mode python_unittest `
   --repetitions $Repetitions `
   --repos $repos `
-  --configs C0_BuildOnly C1_NonBlockingScanning C2_AutoScanning C3_PolicyOnly C4_AgentsOnly C5_SecFlowOps
+  --configs $configs
 
 $runs = Get-ChildItem -Path SecFlowOps\data\raw -Directory |
   Where-Object { $_.Name -like "*full_*" } |
   Sort-Object Name -Descending |
-  Select-Object -First ($repos.Count * 6 * $Repetitions) |
+  Select-Object -First ($repos.Count * $configs.Count * $Repetitions) |
   Sort-Object Name
 
-if ($runs.Count -eq 0) {
-  throw "No full protocol runs found."
-}
+if ($runs.Count -eq 0) { throw "No full protocol runs found." }
 
 $minRunId = $runs[0].Name
 $maxRunId = $runs[$runs.Count - 1].Name
@@ -44,4 +44,4 @@ python SecFlowOps\scripts\compute_metrics.py --min-run-id $minRunId --max-run-id
 python SecFlowOps\scripts\analyze_performance.py --min-run-id $minRunId --max-run-id $maxRunId --label full_protocol
 python SecFlowOps\scripts\statistical_analysis.py --label full_protocol
 
-Write-Host "Full protocol campaign complete. Metrics: SecFlowOps\tables\summary_metrics_full_protocol.csv"
+Write-Host "Full protocol campaign complete. Final design: 3 families x 8 scenarios x 5 configurations x $Repetitions technical repetitions."
