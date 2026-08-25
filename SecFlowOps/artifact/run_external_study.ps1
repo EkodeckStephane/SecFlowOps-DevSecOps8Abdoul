@@ -17,13 +17,7 @@ python SecFlowOps\scripts\prepare_external_corpus.py --repetitions $Repetitions
 python SecFlowOps\scripts\check_tools.py --strict
 SecFlowOps\tools\opa.exe test SecFlowOps\policies\rego
 
-$configs = @(
-  "C1_NonBlockingScanning",
-  "C2_AutoScanning",
-  "C3_PolicyOnly",
-  "C4_AgentsOnly",
-  "C5_SecFlowOps"
-)
+$configs = @("C1_ScanOnly", "C2_PolicyOnly", "C3_RemediationOnly", "C4_SecFlowOps")
 
 python SecFlowOps\scripts\run_matrix.py `
   --smoke `
@@ -40,9 +34,7 @@ $runs = Get-ChildItem -Path SecFlowOps\data\raw -Directory |
   Select-Object -First ($Repos.Count * $configs.Count * $Repetitions) |
   Sort-Object Name
 
-if ($runs.Count -eq 0) {
-  throw "No external campaign runs found."
-}
+if ($runs.Count -eq 0) { throw "No external campaign runs found." }
 
 $minRunId = $runs[0].Name
 python SecFlowOps\scripts\compute_metrics.py --min-run-id $minRunId --label external
@@ -52,4 +44,4 @@ python SecFlowOps\scripts\review_external_adjudication.py
 python SecFlowOps\scripts\compute_adjudicated_metrics.py --campaign-id $CampaignId
 python SecFlowOps\scripts\statistical_analysis.py --label external
 
-Write-Host "External SecFlowOps campaign complete. Metrics: SecFlowOps\tables\summary_metrics_external.csv"
+Write-Host "External SecFlowOps campaign complete."

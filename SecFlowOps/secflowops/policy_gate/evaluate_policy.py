@@ -15,7 +15,6 @@ DEFAULT_POLICY = {
     "high_threshold": 3,
     "cvss_ceiling": 9.0,
     "block_on_secret": True,
-    "min_coverage": 0.80,
 }
 
 
@@ -27,7 +26,6 @@ def _max_cvss(findings: list[dict[str, Any]]) -> float:
 def fallback_decision(
     findings: list[dict[str, Any]],
     *,
-    coverage: float,
     tool_failures: list[str],
     policy: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -37,8 +35,8 @@ def fallback_decision(
     high_count = sum(1 for f in residual if str(f.get("severity")).lower() == "high")
     secret_count = sum(1 for f in residual if f.get("category") == "secret")
     max_cvss = _max_cvss(findings)
-    deny = []
-    warn = []
+    deny: list[str] = []
+    warn: list[str] = []
 
     if critical_count > int(policy["critical_tolerance"]):
         deny.append(f"residual critical findings: {critical_count} > tolerance {policy['critical_tolerance']}")
@@ -48,8 +46,6 @@ def fallback_decision(
         deny.append(f"max residual CVSS {max_cvss:.1f} > ceiling {float(policy['cvss_ceiling']):.1f}")
     if policy.get("block_on_secret", True) and secret_count > 0:
         deny.append(f"residual secret findings: {secret_count}")
-    if coverage < float(policy["min_coverage"]):
-        warn.append(f"coverage {coverage:.3f} < threshold {float(policy['min_coverage']):.3f}")
     for failure in tool_failures:
         warn.append(f"tool failure: {failure}")
 
@@ -72,7 +68,6 @@ def fallback_decision(
 def evaluate_with_opa(
     findings: list[dict[str, Any]],
     *,
-    coverage: float,
     tool_failures: list[str],
     rego_path: Path,
     policy: dict[str, Any] | None = None,
@@ -87,7 +82,6 @@ def evaluate_with_opa(
 
     payload = {
         "findings": findings,
-        "coverage": coverage,
         "tool_failures": tool_failures,
         "policy": {**DEFAULT_POLICY, **(policy or {})},
     }
@@ -126,7 +120,6 @@ def evaluate_policy_file(
     findings_path: Path,
     output_path: Path,
     *,
-    coverage: float,
     tool_failures: list[str] | None = None,
     rego_path: Path | None = None,
     policy: dict[str, Any] | None = None,
@@ -137,13 +130,12 @@ def evaluate_policy_file(
     tool_failures = tool_failures or []
     decision = evaluate_with_opa(
         findings,
-        coverage=coverage,
         tool_failures=tool_failures,
         rego_path=rego_path,
         policy=policy,
     )
     if decision is None:
-        decision = fallback_decision(findings, coverage=coverage, tool_failures=tool_failures, policy=policy)
+        decision = fallback_decision(findings, tool_failures=tool_failures, policy=policy)
     write_json(output_path, decision)
     return decision
 
@@ -154,9 +146,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--findings", required=True)
     parser.add_argument("--output", required=True)
-    parser.add_argument("--coverage", type=float, default=0.0)
     args = parser.parse_args()
-    evaluate_policy_file(Path(args.findings), Path(args.output), coverage=args.coverage)
+    evaluate_policy_file(Path(args.findings), Path(args.output))
 
 
 if __name__ == "__main__":

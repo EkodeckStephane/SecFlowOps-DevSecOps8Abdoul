@@ -1,50 +1,38 @@
 # SecFlowOps
 
-SecFlowOps is the artifact-backed follow-up to the original SecFlow simulation
-paper. The goal is to evaluate the same architectural idea with real CI/CD
-steps, real scanner outputs, a real Policy-as-Code gate, and traceable
-remediation logs.
+SecFlowOps implements the measured trajectory from initial security findings to residual findings and an explicit release decision.
 
-This repository is intentionally conservative:
+## Configurations
 
-- all vulnerable code is local and controlled;
-- secrets are fake test tokens only;
-- results are written to `data/raw`, `data/normalized`, `data/processed`,
-  `tables`, and `figures`;
-- no claim of industrial or production validation is made until CI runs and
-  logs exist.
+| ID | Configuration | Scan | Remediation | Rescan | OPA |
+|---|---|---:|---:|---:|---:|
+| C0 | BuildOnly | no | no | no | no |
+| C1 | ScanOnly | yes | no | no | no |
+| C2 | PolicyOnly | yes | no | no | yes |
+| C3 | RemediationOnly | yes | yes | yes | no |
+| C4 | SecFlowOps | yes | yes | yes | yes |
 
-## Local Smoke Run
+The controlled protocol uses 24 independent workloads (three families by eight scenarios). Three technical repetitions are executed per workload and configuration. Statistical analysis first aggregates those repetitions within each workload and then performs matched comparisons across workloads.
 
-From the repository root:
+## Core commands
 
 ```powershell
 python SecFlowOps\scripts\check_tools.py
 python SecFlowOps\scripts\run_matrix.py --smoke
 python SecFlowOps\scripts\compute_metrics.py
 python SecFlowOps\scripts\statistical_analysis.py
-python SecFlowOps\scripts\generate_figures.py
 ```
 
-The smoke run executes the six configurations once on the controlled
-`repos/sample_api` application. It is not the full study; it verifies that the
-pipeline, normalization, policy gate, metrics, and logs are wired correctly.
+For the complete controlled study:
 
-## Configurations
+```powershell
+powershell -ExecutionPolicy Bypass -File .\SecFlowOps\artifact\run_full_protocol_study.ps1 -Repetitions 3
+```
 
-- `C0_BuildOnly`: build and tests only.
-- `C1_NonBlockingScanning`: real scans, no blocking gate, no remediation.
-- `C2_AutoScanning`: real scans and normalized reports, no gate, no remediation.
-- `C3_PolicyOnly`: real scans and OPA/Rego gate on raw findings.
-- `C4_AgentsOnly`: real scans and semi-autonomous local patches, no gate.
-- `C5_SecFlowOps`: real scans, remediation, rescan, and gate on residual findings.
+## Outcome model
 
-## Current Scope
+Each run records execution completion separately from release outcome. Gated configurations produce `ALLOW` or `DENY`; ungated configurations record the release decision as not applicable. Remediation validation is likewise explicit: `passed`, `failed`, or `not_tested` according to the executed validation command.
 
-The local version uses Trivy immediately when available. Semgrep, Gitleaks, OPA,
-and ZAP are supported by the scripts when installed or made available through
-Docker, but missing tools are recorded as scanner/tool failures instead of being
-silently simulated.
+Ground-truth recall is calculated only for target findings whose expected detector is active in the corresponding study. Natural external repositories are reported in the article through observed initial/residual findings and release outcomes; repository-wide recall is reserved for settings with an enumerated target population. The artifact retains a separate adjudication workflow for natural scanner records.
 
-For Q1-level claims, run the preregistered design in `PROTOCOL.md`, not only the
-smoke test.
+OWASP ZAP evidence used in the article consists of a matched reflected-XSS ground-truth probe plus a three-family breadth rerun. Dynamic results remain separate from the static controlled recall denominator.

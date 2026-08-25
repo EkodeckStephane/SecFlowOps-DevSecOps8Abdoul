@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 import shutil
 import subprocess
@@ -15,8 +14,8 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-class LocalRemediatorAgent:
-    """Deterministic local remediation for controlled SecFlowOps scenarios."""
+class BoundedRemediator:
+    """Deterministic and package-manager remediation in an isolated workspace."""
 
     def __init__(self, workspace: Path, findings_path: Path, output_path: Path):
         self.workspace = workspace
@@ -46,24 +45,30 @@ class LocalRemediatorAgent:
                     "human_review_required": True,
                 })
 
-        test_result = self._run_tests()
-        validated_at = utc_now() if test_result["returncode"] == 0 else None
-        for finding in self.findings:
-            if finding.get("remediated") and validated_at:
-                finding.setdefault("timestamps", {})["patch_validated_at"] = validated_at
+        validation = self._run_tests()
+        validated_at = (
+            utc_now()
+            if validation.get("validation_executed") is True and validation.get("returncode") == 0
+            else None
+        )
+        if validated_at:
+            for finding in self.findings:
+                if finding.get("remediated"):
+                    finding.setdefault("timestamps", {})["patch_validated_at"] = validated_at
 
         write_jsonl(self.findings_path, self.findings)
         result = {
             "started_at": started,
             "finished_at": utc_now(),
-            "mode": "local_workspace_patch",
+            "mode": "bounded_local_workspace_remediation",
             "branch_created": "local-only-no-git-push",
             "pr_created": False,
             "auto_merge": False,
             "patched_files": sorted(patched_files),
             "events": self.events,
             "npm_audit_fix": self.npm_audit_fix_result,
-            "tests": test_result,
+            "validation": validation,
+            "tests": validation,
             "remediated_count": sum(1 for f in self.findings if f.get("remediated")),
             "input_findings": len(self.findings),
         }
@@ -119,7 +124,6 @@ class LocalRemediatorAgent:
             "command": "npm audit fix --package-lock-only --omit=dev",
             "stdout_tail": (proc.stdout or "")[-4000:],
             "stderr_tail": (proc.stderr or "")[-4000:],
-            "note": "Non-zero return codes are expected when npm fixes some issues but residual advisories remain.",
         }
         return self.npm_audit_fix_result
 
@@ -164,7 +168,7 @@ class LocalRemediatorAgent:
                 "AKIAIOSFODNN7EXAMPLE": "SEC_FLOW_OPS_FAKE_KEY_REMOVED",
                 "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY": "SEC_FLOW_OPS_FAKE_SECRET_REMOVED",
             })
-            return "rule_based_agent" if changed else None
+            return "deterministic_secret_replacement" if changed else None
 
         if category == "secret" and file_name == "artifacts/cert/server.key":
             changed = self._write_file_if_changed(
@@ -179,7 +183,7 @@ class LocalRemediatorAgent:
                 "jinja2==3.1.2": "jinja2==3.1.6",
                 "werkzeug==2.3.3": "werkzeug==3.1.6",
             })
-            return "external_pip_dependency_update" if changed else None
+            return "pinned_dependency_update" if changed else None
 
         if category == "sca" and file_name == "package-lock.json":
             result = self._run_npm_audit_fix()
@@ -193,7 +197,7 @@ class LocalRemediatorAgent:
                 "django==2.2.0": "django==4.2.30",
                 "requests==2.19.1": "requests==2.33.0",
             })
-            return "dependency_update" if changed else None
+            return "pinned_dependency_update" if changed else None
 
         if category == "sast" and file_name.endswith("app.py"):
             path = self.workspace / file_name
@@ -216,23 +220,21 @@ class LocalRemediatorAgent:
                 changed = True
             if changed:
                 path.write_text(text, encoding="utf-8")
-                return "rule_based_agent"
+                return "deterministic_source_patch"
             return None
 
         if category == "iac" and file_name.endswith("Dockerfile"):
             if finding.get("repo") == "external_dvna" and file_name == "Dockerfile" and self._patch_dvna_dockerfile():
-                return "external_dockerfile_hardening"
-            changed = self._replace_in_file(file_name, {
-                "USER root": "RUN useradd -m appuser\nUSER appuser",
-            })
-            return "rule_based_agent" if changed else None
+                return "dockerfile_hardening"
+            changed = self._replace_in_file(file_name, {"USER root": "RUN useradd -m appuser\nUSER appuser"})
+            return "dockerfile_hardening" if changed else None
 
         if category == "iac" and file_name.endswith("deployment.yaml"):
             changed = self._replace_in_file(file_name, {
                 "privileged: true": "privileged: false",
                 "runAsUser: 0": "runAsNonRoot: true\n            runAsUser: 10001",
             })
-            return "rule_based_agent" if changed else None
+            return "kubernetes_manifest_hardening" if changed else None
 
         return None
 
@@ -240,11 +242,13 @@ class LocalRemediatorAgent:
         tests_dir = self.workspace / "tests"
         if not tests_dir.exists() or not any(tests_dir.rglob("test*.py")):
             return {
-                "command": "python -m unittest discover -s tests",
-                "returncode": 0,
-                "stdout": "skipped: no local Python unittest suite configured\n",
+                "command": None,
+                "returncode": None,
+                "stdout": "",
                 "stderr": "",
-                "mode": "skipped_no_local_test_command",
+                "validation_executed": False,
+                "validation_status": "not_tested",
+                "validation_mode": "no_native_test_command",
             }
         proc = subprocess.run(
             ["python", "-m", "unittest", "discover", "-s", "tests"],
@@ -257,12 +261,17 @@ class LocalRemediatorAgent:
             "returncode": proc.returncode,
             "stdout": proc.stdout,
             "stderr": proc.stderr,
-            "mode": "python_unittest",
+            "validation_executed": True,
+            "validation_status": "passed" if proc.returncode == 0 else "failed",
+            "validation_mode": "python_unittest",
         }
 
 
 def remediate(workspace: Path, findings_path: Path, output_path: Path) -> dict[str, Any]:
-    return LocalRemediatorAgent(workspace, findings_path, output_path).run()
+    return BoundedRemediator(workspace, findings_path, output_path).run()
+
+
+LocalRemediatorAgent = BoundedRemediator
 
 
 def main() -> None:
