@@ -89,6 +89,8 @@ jobs:
           print(r)
           PY
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: emse-vul4j-pilot-evidence
           path: SecFlowOps/results/emse/vul4j_pilot
+          if-no-files-found: warn
