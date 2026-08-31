@@ -50,10 +50,12 @@ jobs:
           name: emse-vul4j-candidate-corpus
           path: SecFlowOps/data/emse/candidate_security_fixes.csv
 
-  vul4j-pilot:
+  vul4j-diverse-pilot:
     needs: corpus-gate
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+    env:
+      VUL4J_IMAGE: tuhhsoftsec/vul4j@sha256:9e66a0646dc82eaf6cca98001c643cee377207fa5b64a6517ecb529224839404
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -64,33 +66,53 @@ jobs:
           python SecFlowOps/scripts/build_emse_vul4j_corpus.py \
             --output SecFlowOps/data/emse/candidate_security_fixes.csv \
             --min-cases 30 --min-projects 15
-      - name: Pull reproducible Vul4J image
-        run: docker pull tuhhsoftsec/vul4j
-      - name: Replay one real vulnerability and human patch
-        run: |
-          python SecFlowOps/scripts/replay_vul4j_trajectory.py \
-            --manifest SecFlowOps/data/emse/candidate_security_fixes.csv \
-            --output-dir SecFlowOps/results/emse/vul4j_pilot \
-            --image tuhhsoftsec/vul4j \
-            --ids VUL4J-10 \
-            --timeout 2400
-      - name: Validate pilot evidence
+      - name: Select eight trajectories across distinct projects and CWEs
         run: |
           python - <<'PY'
           import csv
-          from pathlib import Path
-          p = Path('SecFlowOps/results/emse/vul4j_pilot/trajectory_validation.csv')
-          rows = list(csv.DictReader(p.open(encoding='utf-8')))
-          assert len(rows) == 1
-          r = rows[0]
-          assert r['vulnerable_state_seen'] == 'True'
-          assert r['human_patch_state_seen'] == 'True'
-          assert r['reproduction_pass'] == 'True'
-          print(r)
+          rows=list(csv.DictReader(open('SecFlowOps/data/emse/candidate_security_fixes.csv', encoding='utf-8')))
+          rows=[r for r in rows if r['candidate_status']=='candidate']
+          chosen=[]; projects=set(); cwes=set()
+          # Keep the validated VUL4J-10 anchor, then diversify.
+          anchor=next((r for r in rows if r['vul_id']=='VUL4J-10'), None)
+          if anchor:
+              chosen.append(anchor); projects.add(anchor['repo_slug']); cwes.add(anchor['cwe_id'])
+          for r in rows:
+              if len(chosen)>=8: break
+              if r['repo_slug'] in projects or not r['cwe_id'] or r['cwe_id'] in cwes: continue
+              chosen.append(r); projects.add(r['repo_slug']); cwes.add(r['cwe_id'])
+          assert len(chosen)==8, len(chosen)
+          ids=' '.join(r['vul_id'] for r in chosen)
+          open('/tmp/vul4j_ids','w').write(ids)
+          print([(r['vul_id'],r['repo_slug'],r['cwe_id'],r['cve_id']) for r in chosen])
+          PY
+      - name: Pull pinned Vul4J image
+        run: docker pull "$VUL4J_IMAGE"
+      - name: Replay vulnerable and human-patched states
+        run: |
+          python SecFlowOps/scripts/replay_vul4j_trajectory.py \
+            --manifest SecFlowOps/data/emse/candidate_security_fixes.csv \
+            --output-dir SecFlowOps/results/emse/vul4j_diverse_pilot \
+            --image "$VUL4J_IMAGE" \
+            --ids $(cat /tmp/vul4j_ids) \
+            --timeout 2400
+      - name: Validate diverse pilot evidence
+        run: |
+          python - <<'PY'
+          import csv
+          p='SecFlowOps/results/emse/vul4j_diverse_pilot/trajectory_validation.csv'
+          rows=list(csv.DictReader(open(p, encoding='utf-8')))
+          assert len(rows)==8, len(rows)
+          assert len({r['repo_slug'] for r in rows})==8
+          assert len({r['cwe_id'] for r in rows})==8
+          assert all(r['vulnerable_state_seen']=='True' for r in rows)
+          assert all(r['human_patch_state_seen']=='True' for r in rows)
+          assert all(r['reproduction_pass']=='True' for r in rows)
+          print(rows)
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: emse-vul4j-pilot-evidence
-          path: SecFlowOps/results/emse/vul4j_pilot
+          name: emse-vul4j-diverse-pilot-evidence
+          path: SecFlowOps/results/emse/vul4j_diverse_pilot
           if-no-files-found: warn
