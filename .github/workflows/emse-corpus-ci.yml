@@ -1,0 +1,51 @@
+name: EMSE corpus CI
+
+on:
+  push:
+    branches: [emse-revision]
+    paths:
+      - 'SecFlowOps/scripts/build_emse_vul4j_corpus.py'
+      - 'SecFlowOps/scripts/replay_vul4j_trajectory.py'
+      - 'SecFlowOps/scripts/analyze_emse_trajectories.py'
+      - 'SecFlowOps/literature/emse_sota_matrix.csv'
+      - 'SecFlowOps/emse/**'
+      - '.github/workflows/emse-corpus-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  corpus-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile EMSE scripts
+        run: |
+          python -m py_compile \
+            SecFlowOps/scripts/build_emse_vul4j_corpus.py \
+            SecFlowOps/scripts/replay_vul4j_trajectory.py \
+            SecFlowOps/scripts/analyze_emse_trajectories.py
+      - name: Build real security-fix candidate corpus
+        run: |
+          python SecFlowOps/scripts/build_emse_vul4j_corpus.py \
+            --output SecFlowOps/data/emse/candidate_security_fixes.csv \
+            --min-cases 30 --min-projects 15
+      - name: Check corpus invariants
+        run: |
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+          p = Path('SecFlowOps/data/emse/candidate_security_fixes.csv')
+          rows = list(csv.DictReader(p.open(encoding='utf-8')))
+          kept = [r for r in rows if r['candidate_status'] == 'candidate']
+          assert len(kept) >= 30, len(kept)
+          assert len({r['repo_slug'] for r in kept}) >= 15
+          assert all(r['human_patch_url'] for r in kept)
+          assert all(r['fix_commit'] for r in kept)
+          print({'rows': len(rows), 'retained': len(kept), 'projects': len({r['repo_slug'] for r in kept})})
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: emse-vul4j-candidate-corpus
+          path: SecFlowOps/data/emse/candidate_security_fixes.csv
