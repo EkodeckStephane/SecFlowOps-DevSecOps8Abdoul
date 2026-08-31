@@ -1,0 +1,24 @@
+name: EMSE Dependabot dataset audit
+
+on:
+  push:
+    branches: [emse-revision]
+    paths:
+      - 'SecFlowOps/scripts/inspect_dependabot_emse_dataset.py'
+      - '.github/workflows/emse-dependabot-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  inspect-replication-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Inspect schemas and samples
+        run: python SecFlowOps/scripts/inspect_dependabot_emse_dataset.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dependabot-emse-schema
+          path: dependabot_emse_schema.json
