@@ -49,3 +49,46 @@ jobs:
         with:
           name: emse-vul4j-candidate-corpus
           path: SecFlowOps/data/emse/candidate_security_fixes.csv
+
+  vul4j-pilot:
+    needs: corpus-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build candidate corpus
+        run: |
+          python SecFlowOps/scripts/build_emse_vul4j_corpus.py \
+            --output SecFlowOps/data/emse/candidate_security_fixes.csv \
+            --min-cases 30 --min-projects 15
+      - name: Pull reproducible Vul4J image
+        run: docker pull tuhhsoftsec/vul4j
+      - name: Replay one real vulnerability and human patch
+        run: |
+          python SecFlowOps/scripts/replay_vul4j_trajectory.py \
+            --manifest SecFlowOps/data/emse/candidate_security_fixes.csv \
+            --output-dir SecFlowOps/results/emse/vul4j_pilot \
+            --image tuhhsoftsec/vul4j \
+            --ids VUL4J-10 \
+            --timeout 2400
+      - name: Validate pilot evidence
+        run: |
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+          p = Path('SecFlowOps/results/emse/vul4j_pilot/trajectory_validation.csv')
+          rows = list(csv.DictReader(p.open(encoding='utf-8')))
+          assert len(rows) == 1
+          r = rows[0]
+          assert r['vulnerable_state_seen'] == 'True'
+          assert r['human_patch_state_seen'] == 'True'
+          assert r['reproduction_pass'] == 'True'
+          print(r)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: emse-vul4j-pilot-evidence
+          path: SecFlowOps/results/emse/vul4j_pilot
