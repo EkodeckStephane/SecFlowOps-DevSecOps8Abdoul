@@ -3,8 +3,7 @@
 
 This driver delegates build/PoV validation to Vul4J's reproducible environment.
 It records process provenance and does not infer scanner effectiveness from PoV
-outcomes. SecFlowOps scanner evidence is added by a separate scan hook when
---scan-command is supplied.
+outcomes. SecFlowOps scanner evidence is added separately from PoV validation.
 """
 from __future__ import annotations
 
@@ -36,11 +35,14 @@ def docker_vul4j(image: str, vul_id: str, host_out: Path, timeout: int) -> dict:
         f"vul4j reproduce --id {shlex.quote(vul_id)} 2>&1 | tee /out/reproduce.log; "
         "cp -f /root/vul4j_data/reproduction.txt /out/reproduction_full.txt 2>/dev/null || true"
     )
-    return run([
+    result = run([
         "docker", "run", "--rm", "--platform", "linux/amd64",
         "-v", f"{host_out.resolve()}:/out", image,
-        "sh", "-lc", shell,
+        "bash", "-lc", shell,
     ], timeout=timeout)
+    (host_out / "docker_stdout.log").write_text(result["stdout"], encoding="utf-8", errors="replace")
+    (host_out / "docker_stderr.log").write_text(result["stderr"], encoding="utf-8", errors="replace")
+    return result
 
 
 def main() -> int:
@@ -67,12 +69,13 @@ def main() -> int:
         case_dir = root / vul_id
         result = docker_vul4j(args.image, vul_id, case_dir, args.timeout)
         log_path = case_dir / "reproduce.log"
-        log_text = log_path.read_text(encoding="utf-8", errors="replace") if log_path.exists() else ""
+        log_text = log_path.read_text(encoding="utf-8", errors="replace") if log_path.exists() else result["stdout"]
         record = {
             "trajectory_id": row["trajectory_id"],
             "vul_id": vul_id,
             "repo_slug": row["repo_slug"],
             "cve_id": row["cve_id"],
+            "cwe_id": row.get("cwe_id", ""),
             "human_patch_url": row["human_patch_url"],
             "reproduce_returncode": result["returncode"],
             "reproduce_elapsed_s": result["elapsed_s"],
