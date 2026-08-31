@@ -7,14 +7,19 @@ on:
       - 'SecFlowOps/scripts/inspect_dependabot_emse_dataset.py'
       - 'SecFlowOps/scripts/build_emse_dependabot_corpus.py'
       - 'SecFlowOps/scripts/resolve_emse_dependabot_commits.py'
+      - 'SecFlowOps/scripts/verify_emse_npm_lock_transitions.py'
       - '.github/workflows/emse-dependabot-ci.yml'
   workflow_dispatch:
 
 jobs:
   inspect-replication-data:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -23,7 +28,8 @@ jobs:
           python -m py_compile \
             SecFlowOps/scripts/inspect_dependabot_emse_dataset.py \
             SecFlowOps/scripts/build_emse_dependabot_corpus.py \
-            SecFlowOps/scripts/resolve_emse_dependabot_commits.py
+            SecFlowOps/scripts/resolve_emse_dependabot_commits.py \
+            SecFlowOps/scripts/verify_emse_npm_lock_transitions.py
       - name: Inspect schemas and samples
         run: python SecFlowOps/scripts/inspect_dependabot_emse_dataset.py
       - name: Build merged security-update candidate corpus
@@ -39,6 +45,14 @@ jobs:
             --input SecFlowOps/data/emse/dependabot_security_updates.csv \
             --output SecFlowOps/data/emse/dependabot_resolved_pairs.csv \
             --limit 100 --min-resolved 30 --min-projects 20
+      - name: Verify package transitions in historical npm lockfiles
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python SecFlowOps/scripts/verify_emse_npm_lock_transitions.py \
+            --input SecFlowOps/data/emse/dependabot_resolved_pairs.csv \
+            --output SecFlowOps/data/emse/dependabot_verified_lock_transitions.csv \
+            --min-verified 20 --min-projects 15
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -47,4 +61,5 @@ jobs:
             dependabot_emse_schema.json
             SecFlowOps/data/emse/dependabot_security_updates.csv
             SecFlowOps/data/emse/dependabot_resolved_pairs.csv
+            SecFlowOps/data/emse/dependabot_verified_lock_transitions.csv
           if-no-files-found: warn
