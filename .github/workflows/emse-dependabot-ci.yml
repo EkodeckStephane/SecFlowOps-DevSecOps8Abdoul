@@ -5,6 +5,8 @@ on:
     branches: [emse-revision]
     paths:
       - 'SecFlowOps/scripts/inspect_dependabot_emse_dataset.py'
+      - 'SecFlowOps/scripts/build_emse_dependabot_corpus.py'
+      - 'SecFlowOps/scripts/resolve_emse_dependabot_commits.py'
       - '.github/workflows/emse-dependabot-ci.yml'
   workflow_dispatch:
 
@@ -16,9 +18,33 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Compile scripts
+        run: |
+          python -m py_compile \
+            SecFlowOps/scripts/inspect_dependabot_emse_dataset.py \
+            SecFlowOps/scripts/build_emse_dependabot_corpus.py \
+            SecFlowOps/scripts/resolve_emse_dependabot_commits.py
       - name: Inspect schemas and samples
         run: python SecFlowOps/scripts/inspect_dependabot_emse_dataset.py
+      - name: Build merged security-update candidate corpus
+        run: |
+          python SecFlowOps/scripts/build_emse_dependabot_corpus.py \
+            --output SecFlowOps/data/emse/dependabot_security_updates.csv \
+            --min-cases 50 --min-projects 20
+      - name: Resolve actual pre/post commit pairs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python SecFlowOps/scripts/resolve_emse_dependabot_commits.py \
+            --input SecFlowOps/data/emse/dependabot_security_updates.csv \
+            --output SecFlowOps/data/emse/dependabot_resolved_pairs.csv \
+            --limit 100 --min-resolved 30 --min-projects 20
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: dependabot-emse-schema
-          path: dependabot_emse_schema.json
+          name: dependabot-emse-corpus
+          path: |
+            dependabot_emse_schema.json
+            SecFlowOps/data/emse/dependabot_security_updates.csv
+            SecFlowOps/data/emse/dependabot_resolved_pairs.csv
+          if-no-files-found: warn
